@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:9999}
+    image: millyprivacy:latest
+    container_name: millyprivacy
+    restart: unless-stopped
+    ports:
+      - "9999:9999"
+    environment:
+      NODE_ENV: production
+      PORT: 9999
+      SYNCPAY_CLIENT_ID: ${SYNCPAY_CLIENT_ID}
+      SYNCPAY_CLIENT_SECRET: ${SYNCPAY_CLIENT_SECRET}
+      SYNCPAY_BASE_URL: ${SYNCPAY_BASE_URL}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:9999}
+    env_file:
+      - .env.local

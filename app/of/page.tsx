@@ -17,6 +17,7 @@ import {
   X,
   Images,
   Play,
+  UserCheck,
   Grid3X3,
   Sparkles,
 } from "lucide-react";
@@ -30,16 +31,22 @@ const CREATOR = {
   stats: { posts: 159, photos: 626, followers: 53, likes: "364.6K" },
 };
 
+const STATS = [
+  { icon: Images,    value: "159" },
+  { icon: Play,      value: "626" },
+  { icon: UserCheck, value: "53" },
+  { icon: Heart,     value: "364.6K" },
+];
+
 const PLANS = [
-  { id: "monthly",   label: "1 Month",              price: "$13.87",  amount: 13.87,  planLabel: "1 Month" },
-  { id: "quarterly", label: "3 Months (16% off)",   price: "$37.87",  amount: 37.87,  planLabel: "3 Months (16% off)" },
-  { id: "lifetime",  label: "Lifetime (50% off)",   price: "$87.98",  amount: 87.98,  planLabel: "Lifetime (50% off)" },
+  { id: "monthly",   label: "1 Month",              price: "$4.87",  amount: 4.87,  planLabel: "1 Month (26% off)",            stripeUrl: "https://buy.stripe.com/cNi14n07c5XV9cldwseIw02" },
+  { id: "quarterly", label: "3 Months (16% off)",   price: "$9.87",  amount: 9.87,  planLabel: "3 Months (32% off)", stripeUrl: "https://buy.stripe.com/eVqeVd6vA0DBgEN2ROeIw07" },
+  { id: "lifetime",  label: "Lifetime (50% off)",   price: "$35.90",  amount: 35.90,  planLabel: "Lifetime (50% off)", stripeUrl: "https://buy.stripe.com/dRmbJ107c5XV9cleAweIw08" },
 ];
 
 const FEED_ITEMS = [
-  { id: "1", isFree: true,  likes: 124, comments: 18 },
-  { id: "2", isFree: false, likes: 341, comments: 47 },
-  { id: "3", isFree: false, likes: 218, comments: 29 },
+  { id: "2", isFree: false, likes: 341, comments: 47, image: "/img/Untitled design (3).png" },
+  { id: "3", isFree: false, likes: 218, comments: 29, image: "/img/foto_4.jpg" },
 ];
 
 const OF_BLUE = "#00AFF0";
@@ -101,19 +108,19 @@ function OFHeader() {
 
 // ─── Profile Card ─────────────────────────────────────────────────────────────
 
-function OFProfileCard({ onSubscribe }: { onSubscribe: () => void }) {
+function OFProfileCard() {
   return (
     <div className="bg-white">
       {/* Cover */}
       <div className="relative h-32 w-full bg-gradient-to-br from-gray-200 to-gray-300 sm:h-40">
-        <div className="cover-bg-of absolute inset-0 opacity-80" />
+        <div className="cover-bg absolute inset-0 opacity-100" />
       </div>
 
       {/* Avatar row */}
       <div className="relative px-4 pb-4">
         <div className="absolute -top-10 left-4 h-[76px] w-[76px] overflow-hidden rounded-full border-[3px] border-white bg-gray-200 shadow-sm">
           <img
-            src="/img/hf_20260128_230614_405631cb-714d-4ffc-a580-026cbe165236.png"
+            src="/img/profile-img.png"
             alt="avatar"
             className="h-full w-full object-cover"
           />
@@ -121,13 +128,15 @@ function OFProfileCard({ onSubscribe }: { onSubscribe: () => void }) {
 
         {/* Subscribe button top-right */}
         <div className="flex justify-end pt-2">
-          <button
-            onClick={onSubscribe}
+          <a
+            href={PLANS[0].stripeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             className="rounded-full px-5 py-2 text-[14px] font-bold text-white transition hover:opacity-90"
             style={{ background: OF_BLUE }}
           >
             Subscribe
-          </button>
+          </a>
         </div>
 
         {/* Name */}
@@ -147,18 +156,16 @@ function OFProfileCard({ onSubscribe }: { onSubscribe: () => void }) {
         <p className="text-[14px] text-gray-500">{CREATOR.username}</p>
 
         {/* Stats */}
-        <div className="mt-3 flex items-center gap-5 border-b border-gray-100 pb-3">
-          {[
-            { label: "Posts",     value: CREATOR.stats.posts },
-            { label: "Photos",    value: CREATOR.stats.photos },
-            { label: "Following", value: CREATOR.stats.followers },
-            { label: "Likes",     value: CREATOR.stats.likes },
-          ].map((s) => (
-            <div key={s.label} className="text-center">
-              <p className="text-[15px] font-bold text-gray-900">{s.value}</p>
-              <p className="text-[11px] text-gray-500">{s.label}</p>
-            </div>
-          ))}
+        <div className="mt-3 flex items-center gap-4 border-b border-gray-100 pb-3">
+          {STATS.map((s) => {
+            const Icon = s.icon;
+            return (
+              <div key={s.value} className="flex items-center gap-1.5">
+                <Icon className="h-3.5 w-3.5 text-gray-400" />
+                <span className="text-[14px] font-semibold text-gray-900">{s.value}</span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Bio */}
@@ -180,8 +187,9 @@ function OFProfileCard({ onSubscribe }: { onSubscribe: () => void }) {
 
 // ─── Subscribe Box ─────────────────────────────────────────────────────────────
 
-function OFSubscribeBox({ onSubscribe }: { onSubscribe: () => void }) {
+function OFSubscribeBox() {
   const { d, h, m, s } = useCountdown(1 * 24 * 3600 + 4 * 3600 + 59 * 60 + 10);
+  const monthlyUrl = PLANS[0].stripeUrl;
 
   return (
     <div className="border-b border-gray-200 bg-white p-4 space-y-3">
@@ -206,22 +214,26 @@ function OFSubscribeBox({ onSubscribe }: { onSubscribe: () => void }) {
         <span className="absolute -top-2.5 left-3 z-10 rounded-full bg-green-400 px-2.5 py-0.5 text-[12px] font-bold text-white">
           Save 26%
         </span>
-        <button
-          onClick={onSubscribe}
-          className="w-full rounded-full py-3.5 text-[15px] font-bold text-white transition hover:opacity-90"
+        <a
+          href={monthlyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full rounded-full py-3.5 text-center text-[15px] font-bold text-white transition hover:opacity-90"
           style={{ background: OF_BLUE }}
         >
-          Subscribe now — R$ 13.87/month
-        </button>
+          Subscribe now — R$ 4,87/month
+        </a>
       </div>
 
       {/* Secondary */}
-      <button
-        onClick={onSubscribe}
-        className="w-full rounded-full border border-gray-300 bg-white py-3 text-[14px] font-semibold text-gray-700 transition hover:bg-gray-50"
+      <a
+        href={monthlyUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full rounded-full border border-gray-300 bg-white py-3 text-center text-[14px] font-semibold text-gray-700 transition hover:bg-gray-50"
       >
         ★ Call Milly now?
-      </button>
+      </a>
 
       <p className="text-right text-[11px] text-gray-400">
         Original price <span className="line-through">R$ 16.47</span>
@@ -232,7 +244,7 @@ function OFSubscribeBox({ onSubscribe }: { onSubscribe: () => void }) {
 
 // ─── Plans Section ────────────────────────────────────────────────────────────
 
-function OFPlansSection({ onSelect }: { onSelect: (label: string, amount: number) => void }) {
+function OFPlansSection() {
   const [open, setOpen] = useState(true);
 
   return (
@@ -248,15 +260,17 @@ function OFPlansSection({ onSelect }: { onSelect: (label: string, amount: number
       {open && (
         <div className="px-4 pb-4 space-y-2">
           {PLANS.map((plan) => (
-            <button
+            <a
               key={plan.id}
-              onClick={() => onSelect(plan.planLabel, plan.amount)}
-              className="flex w-full items-center justify-between rounded-full px-5 py-3.5 text-left font-semibold text-black transition hover:opacity-90"
-              style={{ background: "linear-gradient(90deg, #ffb163, #f5bc6a, #f8c97e, #e89c30)" }}
+              href={plan.stripeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-between rounded-full px-5 py-3.5 text-left font-semibold text-white transition hover:opacity-90"
+              style={{ background: "linear-gradient(90deg, #00AFF0)" }}
             >
               <span className="text-[15px] font-semibold">{plan.label}</span>
               <span className="text-[15px] font-bold">{plan.price}</span>
-            </button>
+            </a>
           ))}
         </div>
       )}
@@ -321,7 +335,7 @@ function OFFeedCard({
         <div className="flex items-center gap-2.5">
           <div className="h-9 w-9 overflow-hidden rounded-full border border-gray-200">
             <img
-              src="/img/hf_20260128_230614_405631cb-714d-4ffc-a580-026cbe165236.png"
+              src="/img/profile-img.png"
               alt="avatar"
               className="h-full w-full object-cover"
             />
@@ -349,9 +363,10 @@ function OFFeedCard({
 
       {/* Media */}
       <div
-        className="relative aspect-video w-full cursor-pointer bg-gradient-to-br from-gray-100 to-gray-200"
+        className="relative aspect-video w-full cursor-pointer overflow-hidden bg-gray-100"
         onClick={!item.isFree ? onLockedClick : undefined}
       >
+        <img src={item.image} alt="media" className="absolute inset-0 h-full w-full object-cover" />
         {!item.isFree && (
           <>
             <div className="absolute inset-0 backdrop-blur-md bg-white/30" />
@@ -368,7 +383,6 @@ function OFFeedCard({
             </div>
           </>
         )}
-        <div className="h-full w-full bg-gradient-to-br from-gray-200/60 to-gray-100" />
       </div>
 
       {/* Actions */}
@@ -541,7 +555,7 @@ function OFPixModal({
             <div className="flex items-start gap-3">
               <div className="h-[56px] w-[56px] shrink-0 overflow-hidden rounded-full border-2 border-gray-200">
                 <img
-                  src="/img/hf_20260128_230614_405631cb-714d-4ffc-a580-026cbe165236.png"
+                  src="/img/profile-img.png"
                   alt="avatar"
                   className="h-full w-full object-cover"
                 />
@@ -700,9 +714,9 @@ export default function OFPage() {
 
       <main className="min-h-screen bg-gray-100 pt-[52px]">
         <div className="mx-auto max-w-[480px] divide-y divide-gray-200 overflow-hidden bg-white shadow-sm">
-          <OFProfileCard onSubscribe={() => openModal("1 Month", 13.87)} />
-          <OFSubscribeBox onSubscribe={() => openModal("1 Month", 13.87)} />
-          <OFPlansSection onSelect={openModal} />
+          <OFProfileCard />
+          <OFSubscribeBox />
+          <OFPlansSection />
           <OFContentFeed onLockedClick={() => openModal("1 Month", 13.87)} />
         </div>
       </main>
