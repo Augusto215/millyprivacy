@@ -1,0 +1,328 @@
+"use client";
+
+import { X, Check, Copy, RefreshCw, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+
+const FEATURES = [
+  "Acesso imediato ao conteúdo protegido",
+  "Chat privado e pedidos personalizados",
+  "Liberação VIP automática após a aprovação",
+];
+
+type Status = "idle" | "creating" | "waiting" | "completed" | "failed" | "expired";
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  planLabel: string;
+  planAmount: number;
+}
+
+function formatBRL(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function qrUrl(data: string) {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=png&data=${encodeURIComponent(data)}`;
+}
+
+export default function PixModal({ isOpen, onClose, planLabel, planAmount }: Props) {
+  const [status, setStatus] = useState<Status>("idle");
+  const [pixCode, setPixCode] = useState<string | null>(null);
+  const [identifier, setIdentifier] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [deliverableShown, setDeliverableShown] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const abortRef = useRef(false);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      abortRef.current = true;
+      setStatus("idle");
+      setPixCode(null);
+      setIdentifier(null);
+      setCopied(false);
+      setErrorMsg(null);
+    }
+  }, [isOpen]);
+
+  const createCharge = useCallback(async () => {
+    abortRef.current = false;
+    setStatus("creating");
+    setPixCode(null);
+    setIdentifier(null);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch("/api/payment/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: planAmount,
+          description: `Assinatura ${planLabel} — Milly Privacy`,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || abortRef.current) {
+        if (!abortRef.current) {
+          setStatus("failed");
+          setErrorMsg(data.error ?? "Erro ao gerar pagamento PIX.");
+        }
+        return;
+      }
+
+      setPixCode(data.pix_code);
+      setIdentifier(data.identifier);
+      setStatus("waiting");
+    } catch {
+      if (!abortRef.current) {
+        setStatus("failed");
+        setErrorMsg("Erro de conexão. Tente novamente.");
+      }
+    }
+  }, [planAmount, planLabel]);
+
+  useEffect(() => {
+    if (isOpen && status === "idle") createCharge();
+  }, [isOpen, status, createCharge]);
+
+  // Poll payment status every 5s
+  useEffect(() => {
+    if (status !== "waiting" || !identifier) return;
+
+    const poll = async () => {
+      if (abortRef.current) return;
+      try {
+        const res = await fetch(`/api/payment/status/${identifier}`);
+        const data = await res.json();
+        if (abortRef.current) return;
+        if (data.status === "completed") setStatus("completed");
+        else if (data.status === "failed") { setStatus("failed"); setErrorMsg("Pagamento recusado."); }
+        else if (data.status === "expired") setStatus("expired");
+      } catch { /* ignore */ }
+    };
+
+    poll();
+    const id = setInterval(poll, 5_000);
+    return () => clearInterval(id);
+  }, [status, identifier]);
+
+  // When payment completes, show deliverable popup
+  useEffect(() => {
+    if (status === "completed") {
+      setDeliverableShown(true);
+    }
+  }, [status]);
+
+  const handleCopy = async () => {
+    if (!pixCode) return;
+    try {
+      await navigator.clipboard.writeText(pixCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2_000);
+    } catch { /* ignore */ }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+
+      <div
+        className="relative w-full max-w-[480px] overflow-hidden rounded-t-[28px] border border-white/10 bg-[#0f0f0f] text-white sm:rounded-[28px]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#e89c30]/80">SYNCPAY</p>
+            <h2 className="text-[18px] font-semibold tracking-[-0.04em] text-white">Pagamento PIX</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition hover:bg-white/8 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="max-h-[82vh] overflow-y-auto px-5 pb-6 pt-4">
+
+          {/* Profile + amount */}
+          <div className="rounded-[20px] border border-white/8 bg-[#181818] p-4">
+            <div className="flex items-start gap-3">
+              <div className="h-[60px] w-[60px] shrink-0 overflow-hidden rounded-full border-[3px] border-[#181818] bg-gradient-to-br from-[#e89c30]/40 to-[#1a1208] flex items-center justify-center">
+  <img
+    src="img/profile-img.png"
+    alt="Avatar"
+    className="h-full w-full object-cover"
+  />
+</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[20px] font-semibold tracking-[-0.04em] text-white leading-tight">Emilly Faria</p>
+                <p className="text-[13px] text-white/45">@millyfaria4</p>
+                <div className="mt-3 rounded-xl bg-[#111111] px-3 py-2.5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e89c30]">VALOR</p>
+                  <p className="mt-0.5 text-[26px] font-semibold tracking-[-0.05em] text-white leading-none">
+                    {formatBRL(planAmount)}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-white/80">{planLabel}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Benefits + payment */}
+          <div className="mt-4 rounded-[20px] border border-white/8 bg-[#181818] p-4">
+            <h3 className="text-[15px] font-semibold text-white">Beneficios exclusivos</h3>
+            <ul className="mt-3 space-y-2.5">
+              {FEATURES.map((f) => (
+                <li key={f} className="flex items-center gap-2.5 text-[14px] text-white/70">
+                  <Check className="h-4 w-4 shrink-0 text-[#e89c30]" strokeWidth={2.5} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            <div className="my-4 border-t border-white/8" />
+            <h3 className="text-[15px] font-semibold text-white">Formas de pagamento</h3>
+
+            {/* Creating */}
+            {status === "creating" && (
+              <div className="flex flex-col items-center py-10">
+                <Loader2 className="h-9 w-9 animate-spin text-[#e89c30]" />
+                <p className="mt-4 text-sm text-white/55">Gerando pagamento PIX...</p>
+              </div>
+            )}
+
+            {/* Failed / expired */}
+            {(status === "failed" || status === "expired") && (
+              <div className="mt-4 flex flex-col items-center py-6 text-center">
+                <p className="text-sm text-white/60">
+                  {status === "expired" ? "PIX expirado." : (errorMsg ?? "Erro ao gerar o PIX.")}
+                </p>
+                <button
+                  onClick={createCharge}
+                  className="mt-4 flex items-center gap-2 rounded-xl border border-white/12 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
+                  <RefreshCw className="h-4 w-4" /> Tentar novamente
+                </button>
+              </div>
+            )}
+
+            {/* Completed */}
+            {status === "completed" && (
+              <div className="mt-4 flex flex-col items-center py-6 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e89c30]/15">
+                  <Check className="h-7 w-7 text-[#e89c30]" strokeWidth={2.5} />
+                </div>
+                <p className="mt-3 text-[17px] font-semibold text-white">Pagamento confirmado!</p>
+                <p className="mt-1 text-sm text-white/50">VIP liberado com sucesso 🎉</p>
+              </div>
+            )}
+
+            {/* Deliverable popup (shown when payment completed) */}
+            {deliverableShown && (
+              <div className="fixed inset-0 z-[110] flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50" onClick={() => setDeliverableShown(false)} />
+                <div className="relative w-[min(440px,94%)] rounded-2xl border border-white/10 bg-[#0f0f0f] p-5 text-white" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[14px] font-semibold">Seu entregável</p>
+                      <p className="mt-2 text-sm text-white/60">Clique no botão para abrir o link no Telegram.</p>
+                    </div>
+                    <button className="text-white/50 hover:text-white" onClick={() => setDeliverableShown(false)}>
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <div className="mt-4 flex flex-col gap-3">
+                    <div className="rounded-xl border border-white/8 bg-[#111111] px-3 py-3 text-left break-words">
+                      <a href="https://t.me/+VoVhGbElU9YwNmQx" target="_blank" rel="noreferrer" className="text-sm text-[#3b82f6]">https://t.me/+VoVhGbElU9YwNmQx</a>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => window.open("https://t.me/+VoVhGbElU9YwNmQx", "_blank")}
+                        className="flex-1 rounded-xl bg-[#3b82f6] px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
+                      >
+                        Abrir entregável
+                      </button>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText("https://t.me/+VoVhGbElU9YwNmQx");
+                          } catch {}
+                        }}
+                        className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white"
+                      >
+                        Copiar link
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Waiting — QR + copy */}
+            {status === "waiting" && pixCode && (
+              <div className="mt-4 text-center">
+                <p className="text-[12px] font-semibold text-[#e89c30]">PIX gerado com sucesso</p>
+                <h4 className="mt-2 text-[17px] font-semibold text-white">Escaneie o QR Code</h4>
+
+                <div className="mt-4 flex justify-center">
+                  <div className="flex h-[200px] w-[200px] items-center justify-center overflow-hidden rounded-[14px] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={qrUrl(pixCode)} alt="QR Code PIX" className="h-full w-full object-contain" />
+                  </div>
+                </div>
+
+                <p className="mt-4 text-[14px] font-semibold text-white">Ou copie o código PIX</p>
+                <div className="mt-2 rounded-xl border border-white/10 bg-[#1a1a1a] px-3 py-2.5 text-left">
+                  <p className="line-clamp-2 break-all text-[12px] text-white/55">{pixCode}</p>
+                </div>
+
+                <button
+                  onClick={handleCopy}
+                  className="mt-3 flex h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-[#3b82f6] text-[14px] font-semibold text-white transition hover:bg-[#2563eb]"
+                >
+                  <Copy className="h-4 w-4" />
+                  {copied ? "Código copiado!" : "Copiar código PIX"}
+                </button>
+
+                <div className="mt-4 rounded-2xl border border-white/8 bg-[#181818] p-3.5 text-left">
+                  <div className="flex items-start gap-2.5">
+                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[#e89c30]/40 bg-[#1d1308] text-[10px] font-bold text-[#e89c30]">
+                      i
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-medium text-white/80">
+                        Abra o app do seu banco, escaneie o QR Code ou cole o código PIX para concluir o pagamento.
+                      </p>
+                      <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-white/45">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Aguardando confirmação do pagamento...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
