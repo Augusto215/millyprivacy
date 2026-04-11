@@ -76,6 +76,7 @@ export default function PixModal({
         body: JSON.stringify({
           amount: planAmount,
           description: `Assinatura ${planLabel} — Milly Privacy`,
+          creator: creatorName,
         }),
       });
 

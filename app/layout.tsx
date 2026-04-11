@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Premium Creator — Exclusive Content & Subscriptions",
+  title: "Privacy",
   description:
     "Access exclusive premium photos and videos from your favorite creator. Subscribe for instant access to the full vault.",
 };

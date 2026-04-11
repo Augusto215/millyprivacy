@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { sendSaleNotification } from "@/lib/telegram";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,9 +20,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "missing identifier" }, { status: 400 });
     }
 
+    // Busca registro existente para checar creator e se já notificou
+    const { data: existing } = await supabaseAdmin
+      .from("sales")
+      .select("creator, notified, amount")
+      .eq("identifier", sale.identifier)
+      .limit(1);
+
+    const record = existing?.[0];
+
     // Upsert into Supabase `sales` table
-    const { error } = await supabaseAdmin.from('sales').upsert(sale, { onConflict: 'identifier' });
+    const { error } = await supabaseAdmin.from("sales").upsert(sale, { onConflict: "identifier" });
     if (error) throw error;
+
+    // Envia notificação no Telegram apenas uma vez quando pagamento é confirmado
+    if (sale.status === "completed" && record?.creator && !record?.notified) {
+      const amount = sale.amount ?? record.amount ?? 0;
+      await sendSaleNotification(record.creator, Number(amount));
+
+      await supabaseAdmin
+        .from("sales")
+        .upsert({ identifier: sale.identifier, notified: true }, { onConflict: "identifier" });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
