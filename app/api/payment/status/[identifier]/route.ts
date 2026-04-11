@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTransactionStatus } from "@/lib/syncpay";
+import { supabaseAdmin } from "@/lib/supabase";
+import { sendSaleNotification } from "@/lib/telegram";
 
 export async function GET(
   _req: NextRequest,
@@ -13,6 +15,26 @@ export async function GET(
     }
 
     const data = await getTransactionStatus(identifier);
+
+    // Quando pagamento confirmado, envia notificação no Telegram (caso webhook não tenha disparado)
+    if (data.status === "completed") {
+      const { data: rows } = await supabaseAdmin
+        .from("sales")
+        .select("creator, notified, amount")
+        .eq("identifier", identifier)
+        .limit(1);
+
+      const record = rows?.[0];
+
+      if (record?.creator && !record?.notified) {
+        const amount = data.amount ?? record.amount ?? 0;
+        await sendSaleNotification(record.creator, Number(amount));
+
+        await supabaseAdmin
+          .from("sales")
+          .upsert({ identifier, notified: true }, { onConflict: "identifier" });
+      }
+    }
 
     return NextResponse.json({ status: data.status });
   } catch (err) {
