@@ -26,9 +26,9 @@ export async function GET(
 
       const record = rows?.[0];
 
-      if (record?.creator && !record?.notified) {
-        const amount = data.amount ?? record.amount ?? 0;
-        await sendSaleNotification(record.creator, Number(amount));
+      if (!record?.notified) {
+        const amount = data.amount ?? record?.amount ?? 0;
+        await sendSaleNotification(Number(amount), identifier, record?.creator ?? null);
 
         await supabaseAdmin
           .from("sales")

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
 import { sendSaleNotification } from "@/lib/telegram";
 import { getTransactionStatus } from "@/lib/syncpay";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,29 +16,17 @@ export async function POST(req: NextRequest) {
     // Consulta o status real via API do SyncPay (webhook não envia status)
     const transaction = await getTransactionStatus(identifier);
 
-    // Upsert com dados reais da transação
-    const { error } = await supabaseAdmin.from("sales").upsert(
-      {
-        identifier,
-        amount: transaction.amount,
-        status: transaction.status,
-        transaction_date: transaction.transaction_date,
-      },
-      { onConflict: "identifier" }
-    );
-    if (error) throw error;
-
     if (transaction.status === "completed") {
       const { data: rows } = await supabaseAdmin
         .from("sales")
-        .select("creator, notified, amount")
+        .select("creator, notified")
         .eq("identifier", identifier)
         .limit(1);
 
       const record = rows?.[0];
 
-      if (record?.creator && !record?.notified) {
-        await sendSaleNotification(record.creator, Number(transaction.amount ?? record.amount ?? 0));
+      if (!record?.notified) {
+        await sendSaleNotification(transaction.amount, identifier, record?.creator ?? null);
 
         await supabaseAdmin
           .from("sales")

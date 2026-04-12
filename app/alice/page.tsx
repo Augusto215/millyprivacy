@@ -95,6 +95,7 @@ export default function Alice() {
         creatorName={CREATOR.name}
         creatorHandle={CREATOR.username}
         profileImg={CREATOR.profileImg}
+        deliverableLink="https://t.me/+HoiUH9nlGrxjYjhh"
       />
     </>
   );

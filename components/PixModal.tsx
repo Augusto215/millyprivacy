@@ -19,6 +19,7 @@ interface Props {
   creatorName?: string;
   creatorHandle?: string;
   profileImg?: string;
+  deliverableLink?: string;
 }
 
 function formatBRL(value: number) {
@@ -37,6 +38,7 @@ export default function PixModal({
   creatorName = "Emilly Faria",
   creatorHandle = "@millyfaria4",
   profileImg = "img/profile-img.png",
+  deliverableLink = "https://t.me/+VoVhGbElU9YwNmQx",
 }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [pixCode, setPixCode] = useState<string | null>(null);
@@ -262,12 +264,12 @@ export default function PixModal({
 
                   <div className="mt-4 flex flex-col gap-3">
                     <div className="rounded-xl border border-white/8 bg-[#111111] px-3 py-3 text-left break-words">
-                      <a href="https://t.me/+VoVhGbElU9YwNmQx" target="_blank" rel="noreferrer" className="text-sm text-[#3b82f6]">https://t.me/+VoVhGbElU9YwNmQx</a>
+                      <a href={deliverableLink} target="_blank" rel="noreferrer" className="text-sm text-[#3b82f6]">{deliverableLink}</a>
                     </div>
 
                     <div className="flex gap-2">
                       <button
-                        onClick={() => window.open("https://t.me/+VoVhGbElU9YwNmQx", "_blank")}
+                        onClick={() => window.open(deliverableLink, "_blank")}
                         className="flex-1 rounded-xl bg-[#3b82f6] px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
                       >
                         Abrir entregável
@@ -275,7 +277,7 @@ export default function PixModal({
                       <button
                         onClick={async () => {
                           try {
-                            await navigator.clipboard.writeText("https://t.me/+VoVhGbElU9YwNmQx");
+                            await navigator.clipboard.writeText(deliverableLink);
                           } catch {}
                         }}
                         className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white"
