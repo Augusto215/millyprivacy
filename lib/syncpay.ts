@@ -105,5 +105,6 @@ export async function getTransactionStatus(
   }
 
   const data = await res.json();
+  console.log("[SyncPay transaction]", JSON.stringify(data, null, 2));
   return data.data as TransactionStatus;
 }

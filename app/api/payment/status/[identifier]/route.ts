@@ -14,10 +14,11 @@ export async function GET(
     }
 
     const page = req.nextUrl.searchParams.get("page");
+    const plan = req.nextUrl.searchParams.get("plan");
     const data = await getTransactionStatus(identifier);
 
     if (data.status === "completed") {
-      await sendSaleNotification(data.amount, identifier, page);
+      await sendSaleNotification(data.amount, identifier, page, plan);
     }
 
     return NextResponse.json({ status: data.status });
