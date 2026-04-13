@@ -717,7 +717,7 @@ export default function OFPage() {
           <OFProfileCard />
           <OFSubscribeBox />
           <OFPlansSection />
-          <OFContentFeed onLockedClick={() => openModal("1 Month", 13.87)} />
+          <OFContentFeed onLockedClick={() => window.open(PLANS[0].stripeUrl, "_blank")} />
         </div>
       </main>
 

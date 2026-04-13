@@ -684,6 +684,17 @@ interface SelectedPlan {
 export default function YasminOFPage() {
   const [plan, setPlan] = useState<SelectedPlan | null>(null);
 
+  useEffect(() => {
+    fetch("https://ip-api.com/json/?fields=countryCode")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.countryCode && data.countryCode !== "BR") {
+          window.location.replace("https://privacy.millyfaria.fun/yasminof");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const openModal = (label: string, amount: number) => setPlan({ label, amount });
   const closeModal = () => setPlan(null);
 
