@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Plus, Loader2, BarChart2, Link2, FileText, LogOut, Image, Video, GripVertical } from "lucide-react";
+import { Trash2, Plus, Loader2, BarChart2, Link2, FileText, LogOut, Image, Video, GripVertical, RefreshCw } from "lucide-react";
 import { MediaInput } from "@/components/MediaInput";
 
 type Sale = { identifier: string; amount: number; status: string; transaction_date: string; linkId?: string; creator?: string };
@@ -36,6 +36,8 @@ export default function AdminPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newValue, setNewValue] = useState("");
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editValue, setEditValue] = useState("");
@@ -56,6 +58,20 @@ export default function AdminPage() {
   async function logout() {
     await fetch("/api/admin/auth", { method: "DELETE" });
     router.replace("/admin/login");
+  }
+
+  async function syncSales() {
+    setSyncing(true);
+    setSyncResult(null);
+    const res = await fetch("/api/admin/sales/sync", { method: "POST" });
+    const data = await res.json();
+    if (res.ok) {
+      setSyncResult(`${data.updated} de ${data.total} atualizados`);
+      fetchSales();
+    } else {
+      setSyncResult("Erro ao sincronizar.");
+    }
+    setSyncing(false);
   }
 
   async function fetchSales() {
@@ -232,7 +248,20 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
-            <h2 className="text-sm font-semibold text-white/60 mb-3">Vendas recentes</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-white/60">Vendas recentes</h2>
+              <div className="flex items-center gap-2">
+                {syncResult && <span className="text-xs text-white/40">{syncResult}</span>}
+                <button
+                  onClick={syncSales}
+                  disabled={syncing}
+                  className="flex items-center gap-1.5 rounded-lg border border-white/8 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60 hover:text-white transition disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+                  {syncing ? "Sincronizando..." : "Sincronizar status"}
+                </button>
+              </div>
+            </div>
             <div className="space-y-2">
               {sales.slice().reverse().map((s) => (
                 <div key={s.identifier} className="rounded-xl border border-white/8 bg-white/3 p-3 flex items-center justify-between gap-4">
