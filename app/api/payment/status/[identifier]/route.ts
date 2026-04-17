@@ -38,6 +38,12 @@ export async function GET(
         .from("sales")
         .update({ status: data.status })
         .eq("identifier", identifier);
+
+      // Remove access by deleting the purchase
+      await supabaseAdmin
+        .from("user_purchases")
+        .delete()
+        .eq("sale_identifier", identifier);
     }
 
     return NextResponse.json({ status: data.status });

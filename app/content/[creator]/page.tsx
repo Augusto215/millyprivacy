@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { Lock, LogOut, Loader2, Heart } from "lucide-react";
+import { Lock, LogOut, Loader2, Heart, MessageCircle } from "lucide-react";
 
 interface ContentBlock {
   id: string;
@@ -29,6 +29,11 @@ const CREATOR_PROFILE: Record<string, string> = {
   yasmin:   "/img/coloca_pra_primeira_202604102110.png",
   yasminof: "/img/coloca_pra_primeira_202604102110.png",
   alice:    "/img/Coloca_a_mulher_202604111310.png",
+};
+
+const CREATOR_WHATSAPP: Record<string, string> = {
+  emilly: "https://wa.me/5516981622872",
+  of:     "https://wa.me/5516981622872",
 };
 
 export default function ContentPage() {
@@ -124,6 +129,17 @@ export default function ContentPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
+      {CREATOR_WHATSAPP[creator] && (
+        <a
+          href={CREATOR_WHATSAPP[creator]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 transition shadow-lg hover:shadow-xl"
+        >
+          <MessageCircle className="h-7 w-7 text-white" />
+        </a>
+      )}
+      <div>
       {/* Top bar */}
       <div className="border-b border-white/8 px-4 py-3">
         <div className="mx-auto max-w-[600px] flex items-center justify-between">
@@ -137,12 +153,24 @@ export default function ContentPage() {
               <h1 className="text-[15px] font-semibold text-white leading-tight">{creatorLabel}</h1>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 rounded-xl border border-white/8 bg-white/5 px-3 py-2 text-[13px] text-white/50 hover:text-white transition"
-          >
-            <LogOut className="h-3.5 w-3.5" /> Sair
-          </button>
+          <div className="flex items-center gap-2">
+            {CREATOR_WHATSAPP[creator] && (
+              <a
+                href={CREATOR_WHATSAPP[creator]}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-xl border border-green-500/20 bg-green-500/10 px-3 py-2 text-[13px] text-green-400 hover:bg-green-500/20 transition"
+              >
+                <MessageCircle className="h-3.5 w-3.5" /> Fale comigo
+              </a>
+            )}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 rounded-xl border border-white/8 bg-white/5 px-3 py-2 text-[13px] text-white/50 hover:text-white transition"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Sair
+            </button>
+          </div>
         </div>
       </div>
 
@@ -183,6 +211,7 @@ export default function ContentPage() {
             </div>
           ))
         )}
+      </div>
       </div>
     </div>
   );

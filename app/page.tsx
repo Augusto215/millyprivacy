@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import ProfileCard from "@/components/ProfileCard";
 import SubscribeBox from "@/components/SubscribeBox";
@@ -14,12 +15,28 @@ interface SelectedPlan {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [plan, setPlan] = useState<SelectedPlan | null>(null);
 
   const openModal = (label: string, amount: number) =>
     setPlan({ label, amount });
 
   const closeModal = () => setPlan(null);
+
+  useEffect(() => {
+    async function checkCountry() {
+      try {
+        const res = await fetch("/api/check-country");
+        const data = await res.json();
+        if (data.countryCode !== "BR") {
+          router.replace("/of");
+        }
+      } catch (error) {
+        console.error("Error checking country:", error);
+      }
+    }
+    checkCountry();
+  }, [router]);
 
   return (
     <>
