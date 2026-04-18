@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabaseBrowser } from "@/lib/supabase-browser";
 import Header from "@/components/Header";
 import ProfileCard from "@/components/ProfileCard";
 import SubscribeBox from "@/components/SubscribeBox";
@@ -17,6 +18,20 @@ interface SelectedPlan {
 export default function Home() {
   const router = useRouter();
   const [plan, setPlan] = useState<SelectedPlan | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: userData } = await supabaseBrowser.auth.getUser();
+      if (userData.user) {
+        router.replace("/content/emilly");
+      }
+      setMounted(true);
+    }
+    checkAuth();
+  }, [router]);
+
+  if (!mounted) return null;
 
   const openModal = (label: string, amount: number) =>
     setPlan({ label, amount });
