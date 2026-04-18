@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { Lock, LogOut, Loader2, Heart, MessageCircle } from "lucide-react";
+import { Lock, LogOut, Loader2, Heart, MessageCircle, Video } from "lucide-react";
+import Header from "@/components/Header";
 
 interface ContentBlock {
   id: string;
@@ -96,10 +97,10 @@ export default function ContentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center pt-12">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-[#e89c30]" />
-          <p className="text-sm text-white/40">Verificando acesso...</p>
+          <p className="text-sm text-gray-500">Verificando acesso...</p>
         </div>
       </div>
     );
@@ -107,14 +108,14 @@ export default function ContentPage() {
 
   if (errorMsg) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-white flex items-center justify-center px-4 pt-12">
         <div className="w-full max-w-[380px] text-center">
           <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10">
-            <Lock className="h-6 w-6 text-red-400" />
+            <Lock className="h-6 w-6 text-red-500" />
           </div>
-          <h2 className="text-[20px] font-bold text-white">Acesso negado</h2>
-          <p className="mt-2 text-sm text-white/50">{errorMsg}</p>
-          <button onClick={() => router.replace("/")} className="mt-6 rounded-xl bg-white/8 px-6 py-3 text-sm font-semibold text-white hover:bg-white/12 transition">
+          <h2 className="text-[20px] font-bold text-black">Acesso negado</h2>
+          <p className="mt-2 text-sm text-gray-500">{errorMsg}</p>
+          <button onClick={() => router.replace("/")} className="mt-6 rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition">
             Voltar ao início
           </button>
         </div>
@@ -128,91 +129,93 @@ export default function ContentPage() {
   const profileImg = CREATOR_PROFILE[creator] ?? "/img/profile-img.png";
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
-      {CREATOR_WHATSAPP[creator] && (
-        <a
-          href={CREATOR_WHATSAPP[creator]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 transition shadow-lg hover:shadow-xl"
-        >
-          <MessageCircle className="h-7 w-7 text-white" />
-        </a>
-      )}
-      <div>
-      {/* Top bar */}
-      <div className="border-b border-white/8 px-4 py-3">
-        <div className="mx-auto max-w-[600px] flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-[#e89c30]/40">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={profileImg} alt={creatorLabel} className="h-full w-full object-cover" />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#e89c30]/70">Área VIP</p>
-              <h1 className="text-[15px] font-semibold text-white leading-tight">{creatorLabel}</h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {CREATOR_WHATSAPP[creator] && (
-              <a
-                href={CREATOR_WHATSAPP[creator]}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-xl border border-green-500/20 bg-green-500/10 px-3 py-2 text-[13px] text-green-400 hover:bg-green-500/20 transition"
-              >
-                <MessageCircle className="h-3.5 w-3.5" /> Fale comigo
-              </a>
-            )}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 rounded-xl border border-white/8 bg-white/5 px-3 py-2 text-[13px] text-white/50 hover:text-white transition"
-            >
-              <LogOut className="h-3.5 w-3.5" /> Sair
-            </button>
-          </div>
-        </div>
-      </div>
+    <>
+      <Header />
+      <div className="min-h-screen bg-white pt-12">
+        {CREATOR_WHATSAPP[creator] && (
+          <a
+            href={CREATOR_WHATSAPP[creator]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 transition shadow-lg hover:shadow-xl"
+          >
+            <Video className="h-7 w-7 text-white" />
+          </a>
+        )}
 
-      {/* Content feed */}
-      <div className="mx-auto max-w-[600px] px-4 py-6 flex flex-col gap-5">
-        {blocks.length === 0 ? (
-          <div className="rounded-2xl border border-white/8 bg-[#111111] p-10 text-center">
-            <p className="text-white/30 text-sm">Conteúdo exclusivo em breve!</p>
-          </div>
-        ) : (
-          blocks.map((block) => (
-            <div key={block.id} className="rounded-2xl overflow-hidden border border-white/8 bg-[#111111]">
-              {/* Media */}
-              {block.type === "image" ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={block.value} alt={block.title} className="w-full object-cover" />
-              ) : (
-                <video src={block.value} controls playsInline className="w-full" />
-              )}
-
-              {/* Footer */}
-              <div className="flex items-center justify-between px-4 py-3 gap-3">
-                <p className="text-[15px] font-semibold text-white">{block.title}</p>
-
-                {/* Heart reaction */}
-                <button
-                  onClick={() => toggleReaction(block.id)}
-                  className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium transition shrink-0 ${
-                    block.userReacted
-                      ? "bg-red-500/15 text-red-400"
-                      : "bg-white/5 text-white/40 hover:text-white/70"
-                  }`}
-                >
-                  <Heart className={`h-4 w-4 ${block.userReacted ? "fill-red-400" : ""}`} />
-                  {block.reactions > 0 && <span>{block.reactions}</span>}
-                </button>
+        {/* Creator info bar */}
+        <div className="border-b border-gray-200 px-4 py-3">
+          <div className="mx-auto max-w-[600px] flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-[#f59b32]/30">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={profileImg} alt={creatorLabel} className="h-full w-full object-cover" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#f59b32]">Área VIP</p>
+                <h1 className="text-[15px] font-semibold text-black leading-tight">{creatorLabel}</h1>
               </div>
             </div>
-          ))
-        )}
+            <div className="flex items-center gap-2">
+              {CREATOR_WHATSAPP[creator] && (
+                <a
+                  href={CREATOR_WHATSAPP[creator]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 rounded-xl border border-green-500/30 bg-green-500/10 px-3 py-2 text-[13px] text-green-600 hover:bg-green-500/20 transition"
+                >
+                  <Video className="h-3.5 w-3.5" /> Chamada de vídeo
+                </a>
+              )}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 rounded-xl border border-gray-300 bg-gray-50 px-3 py-2 text-[13px] text-gray-600 hover:text-black hover:bg-gray-100 transition"
+              >
+                <LogOut className="h-3.5 w-3.5" /> Sair
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Content feed */}
+        <div className="mx-auto max-w-[600px] px-4 py-6 flex flex-col gap-5">
+          {blocks.length === 0 ? (
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-10 text-center">
+              <p className="text-gray-400 text-sm">Conteúdo exclusivo em breve!</p>
+            </div>
+          ) : (
+            blocks.map((block) => (
+              <div key={block.id} className="rounded-2xl overflow-hidden border border-gray-200 bg-white">
+                {/* Media */}
+                {block.type === "image" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={block.value} alt={block.title} className="w-full object-cover" />
+                ) : (
+                  <video src={block.value} controls playsInline className="w-full" />
+                )}
+
+                {/* Footer */}
+                <div className="flex items-center justify-between px-4 py-3 gap-3 border-t border-gray-200">
+                  <p className="text-[15px] font-semibold text-black">{block.title}</p>
+
+                  {/* Heart reaction */}
+                  <button
+                    onClick={() => toggleReaction(block.id)}
+                    className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium transition shrink-0 ${
+                      block.userReacted
+                        ? "bg-red-500/20 text-red-500"
+                        : "bg-gray-100 text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    <Heart className={`h-4 w-4 ${block.userReacted ? "fill-red-500" : ""}`} />
+                    {block.reactions > 0 && <span>{block.reactions}</span>}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
-      </div>
-    </div>
+    </>
   );
 }
