@@ -4,6 +4,7 @@ import { X, Check, Copy, RefreshCw, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { fbqEvent } from "@/components/MetaPixel";
+import DeliveryChoiceModal from "@/components/DeliveryChoiceModal";
 
 const FEATURES = [
   "Acesso imediato ao conteúdo protegido",
@@ -49,6 +50,7 @@ export default function PixModal({
   const [identifier, setIdentifier] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showDeliveryChoice, setShowDeliveryChoice] = useState(false);
   const abortRef = useRef(false);
 
   useEffect(() => {
@@ -132,20 +134,29 @@ export default function PixModal({
     return () => clearInterval(id);
   }, [status, identifier]);
 
-  // When payment completes, fire Purchase event then redirect
+  // When payment completes, fire Purchase event then show delivery choice
   useEffect(() => {
     if (status === "completed" && identifier) {
       fbqEvent("Purchase", { value: planAmount, currency: "BRL", content_name: planLabel });
+      setTimeout(() => {
+        setShowDeliveryChoice(true);
+      }, 1500);
+    }
+  }, [status, identifier, planAmount, planLabel]);
+
+  const handleDeliveryChoice = (deliveryMethod: "site" | "telegram") => {
+    if (deliveryMethod === "site") {
       const params = new URLSearchParams({
-        sale: identifier,
+        sale: identifier || "",
         creator: creatorSlug,
         plan: planLabel,
       });
+      setShowDeliveryChoice(false);
       setTimeout(() => {
         router.push(`/security-fee?${params.toString()}`);
-      }, 1500);
+      }, 300);
     }
-  }, [status, identifier, creatorSlug, planLabel, router]);
+  };
 
   const handleCopy = async () => {
     if (!pixCode) return;
@@ -157,6 +168,10 @@ export default function PixModal({
   };
 
   if (!isOpen) return null;
+
+  const handleCloseDeliveryChoice = () => {
+    setShowDeliveryChoice(false);
+  };
 
   return (
     <div
@@ -307,6 +322,14 @@ export default function PixModal({
           </div>
         </div>
       </div>
+
+      <DeliveryChoiceModal
+        isOpen={showDeliveryChoice}
+        onClose={handleCloseDeliveryChoice}
+        onTelegram={() => handleDeliveryChoice("telegram")}
+        onSite={() => handleDeliveryChoice("site")}
+        creatorSlug={creatorSlug}
+      />
     </div>
   );
 }
