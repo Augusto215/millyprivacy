@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   Bell,
   Search,
@@ -10,19 +10,13 @@ import {
   Bookmark,
   Lock,
   ChevronUp,
-  Copy,
-  Check,
-  RefreshCw,
   Loader2,
-  X,
   Images,
   Play,
   UserCheck,
   Grid3X3,
   Sparkles,
 } from "lucide-react";
-
-// ─── Dados da Yasmin — edite aqui ────────────────────────────────────────────
 
 const CREATOR = {
   name: "Yasmin Torrez",
@@ -40,9 +34,9 @@ const STATS = [
 ];
 
 const PLANS = [
-  { id: "monthly",   label: "1 Month",            price: "R$ 4,87", amount: 4.87, planLabel: "1 Month (26% off)",    stripeUrl: "https://buy.stripe.com/14AdR91bg8632NXakgeIw09" },
-  { id: "quarterly", label: "3 Months (42% off)", price: "R$ 9,87", amount: 9.87, planLabel: "3 Months (42% off)",   stripeUrl: "https://buy.stripe.com/dRmeVd1bggCzbkt1NKeIw0a" },
-  { id: "lifetime",  label: "Lifetime (50% off)", price: "R$ 35,90", amount: 35.98, planLabel: "Lifetime (50% off)",   stripeUrl: "https://buy.stripe.com/8x200jf264TRfAJ3VSeIw0b" },
+  { id: "monthly",   label: "1 Month",            price: "$4.87",  amount: 4.87,  planLabel: "1 Month (26% off)" },
+  { id: "quarterly", label: "3 Months (42% off)", price: "$9.87",  amount: 9.87,  planLabel: "3 Months (42% off)" },
+  { id: "lifetime",  label: "Lifetime (50% off)", price: "$35.98", amount: 35.98, planLabel: "Lifetime (50% off)" },
 ];
 
 const FEED_ITEMS = [
@@ -50,17 +44,7 @@ const FEED_ITEMS = [
   { id: "2", isFree: false, likes: 341, comments: 47, image: "/img/Untitled design (3).png" },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 const OF_BLUE = "#00AFF0";
-
-function formatBRL(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function qrUrl(data: string) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=png&data=${encodeURIComponent(data)}`;
-}
 
 function useCountdown(targetSeconds: number) {
   const [secs, setSecs] = useState(targetSeconds);
@@ -75,8 +59,6 @@ function useCountdown(targetSeconds: number) {
   const s = secs % 60;
   return { d, h, m, s };
 }
-
-// ─── OF Header ────────────────────────────────────────────────────────────────
 
 function OFHeader() {
   return (
@@ -105,12 +87,9 @@ function OFHeader() {
   );
 }
 
-// ─── Profile Card ─────────────────────────────────────────────────────────────
-
-function OFProfileCard() {
+function OFProfileCard({ onSubscribeClick }: { onSubscribeClick: () => void }) {
   return (
     <div className="bg-white">
-      {/* Cover */}
       <div className="relative h-32 w-full bg-gradient-to-br from-gray-200 to-gray-300 sm:h-40">
         <div
           className="absolute inset-0 opacity-100"
@@ -122,26 +101,21 @@ function OFProfileCard() {
         />
       </div>
 
-      {/* Avatar row */}
       <div className="relative px-4 pb-4">
         <div className="absolute -top-10 left-4 h-[76px] w-[76px] overflow-hidden rounded-full border-[3px] border-white bg-gray-200 shadow-sm">
           <img src={CREATOR.profileImg} alt="avatar" className="h-full w-full object-cover" />
         </div>
 
-        {/* Subscribe button top-right */}
         <div className="flex justify-end pt-2">
-          <a
-            href={PLANS[0].stripeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={onSubscribeClick}
             className="rounded-full px-5 py-2 text-[14px] font-bold text-white transition hover:opacity-90"
             style={{ background: OF_BLUE }}
           >
             Subscribe
-          </a>
+          </button>
         </div>
 
-        {/* Name */}
         <div className="mt-2 flex items-center gap-1.5">
           <h1 className="text-[18px] font-bold text-gray-900">{CREATOR.name}</h1>
           <svg viewBox="0 0 22 22" className="h-5 w-5 shrink-0" fill="none">
@@ -156,7 +130,6 @@ function OFProfileCard() {
         </div>
         <p className="text-[14px] text-gray-500">{CREATOR.username}</p>
 
-        {/* Stats */}
         <div className="mt-3 flex items-center gap-4 border-b border-gray-100 pb-3">
           {STATS.map((s) => {
             const Icon = s.icon;
@@ -169,10 +142,8 @@ function OFProfileCard() {
           })}
         </div>
 
-        {/* Bio */}
         <p className="mt-3 text-[14px] leading-relaxed text-gray-700">{CREATOR.bio}</p>
 
-        {/* Social links */}
         <div className="mt-3 flex items-center gap-2">
           <a href="#" className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-500 transition hover:bg-gray-200">
             <InstagramIcon />
@@ -186,11 +157,8 @@ function OFProfileCard() {
   );
 }
 
-// ─── Subscribe Box ─────────────────────────────────────────────────────────────
-
-function OFSubscribeBox() {
+function OFSubscribeBox({ onCheckout }: { onCheckout: () => void }) {
   const { d, h, m, s } = useCountdown(1 * 24 * 3600 + 4 * 3600 + 59 * 60 + 10);
-  const monthlyUrl = PLANS[0].stripeUrl;
 
   return (
     <div className="border-b border-gray-200 bg-white p-4 space-y-3">
@@ -212,36 +180,30 @@ function OFSubscribeBox() {
         <span className="absolute -top-2.5 left-3 z-10 rounded-full bg-green-400 px-2.5 py-0.5 text-[12px] font-bold text-white">
           Save 26%
         </span>
-        <a
-          href={monthlyUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={onCheckout}
           className="block w-full rounded-full py-3.5 text-center text-[15px] font-bold text-white transition hover:opacity-90"
           style={{ background: OF_BLUE }}
         >
-          Subscribe now — R$ 4,87/month
-        </a>
+          Subscribe now — $4.87/month
+        </button>
       </div>
 
-      <a
-        href={monthlyUrl}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        onClick={onCheckout}
         className="block w-full rounded-full border border-gray-300 bg-white py-3 text-center text-[14px] font-semibold text-gray-700 transition hover:bg-gray-50"
       >
         ★ Call Yasmin now?
-      </a>
+      </button>
 
       <p className="text-right text-[11px] text-gray-400">
-        Original price <span className="line-through">R$ 18,74</span>
+        Original price <span className="line-through">$13.75</span>
       </p>
     </div>
   );
 }
 
-// ─── Plans Section ────────────────────────────────────────────────────────────
-
-function OFPlansSection() {
+function OFPlansSection({ onSelectPlan }: { onSelectPlan: (plan: typeof PLANS[0]) => void }) {
   const [open, setOpen] = useState(true);
 
   return (
@@ -257,25 +219,21 @@ function OFPlansSection() {
       {open && (
         <div className="px-4 pb-4 space-y-2">
           {PLANS.map((plan) => (
-            <a
+            <button
               key={plan.id}
-              href={plan.stripeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              onClick={() => onSelectPlan(plan)}
               className="flex w-full items-center justify-between rounded-full px-5 py-3.5 text-left font-semibold text-white transition hover:opacity-90"
               style={{ background: "linear-gradient(90deg, #00AFF0)" }}
             >
               <span className="text-[15px] font-semibold">{plan.label}</span>
               <span className="text-[15px] font-bold">{plan.price}</span>
-            </a>
+            </button>
           ))}
         </div>
       )}
     </div>
   );
 }
-
-// ─── Content Feed ─────────────────────────────────────────────────────────────
 
 const TABS = [
   { id: "posts", label: "513 Posts",   Icon: Grid3X3 },
@@ -393,271 +351,6 @@ function OFFeedCard({
   );
 }
 
-// ─── PIX Modal ────────────────────────────────────────────────────────────────
-
-const FEATURES = [
-  "Immediate access to exclusive content",
-  "Private chat and personalized requests",
-  "VIP access unlocked automatically after payment",
-];
-
-type Status = "idle" | "creating" | "waiting" | "completed" | "failed" | "expired";
-
-function OFPixModal({
-  isOpen,
-  onClose,
-  planLabel,
-  planAmount,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  planLabel: string;
-  planAmount: number;
-}) {
-  const [status, setStatus] = useState<Status>("idle");
-  const [pixCode, setPixCode] = useState<string | null>(null);
-  const [identifier, setIdentifier] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const abortRef = useRef(false);
-
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      abortRef.current = true;
-      setStatus("idle");
-      setPixCode(null);
-      setIdentifier(null);
-      setCopied(false);
-      setErrorMsg(null);
-    }
-  }, [isOpen]);
-
-  const createCharge = useCallback(async () => {
-    abortRef.current = false;
-    setStatus("creating");
-    setPixCode(null);
-    setIdentifier(null);
-    setErrorMsg(null);
-
-    try {
-      const res = await fetch("/api/payment/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: planAmount,
-          description: `Subscription ${planLabel} — Yasmin Torrez`,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || abortRef.current) {
-        if (!abortRef.current) {
-          setStatus("failed");
-          setErrorMsg(data.error ?? "Failed to generate PIX payment.");
-        }
-        return;
-      }
-
-      setPixCode(data.pix_code);
-      setIdentifier(data.identifier);
-      setStatus("waiting");
-    } catch {
-      if (!abortRef.current) {
-        setStatus("failed");
-        setErrorMsg("Connection error. Please try again.");
-      }
-    }
-  }, [planAmount, planLabel]);
-
-  useEffect(() => {
-    if (isOpen && status === "idle") createCharge();
-  }, [isOpen, status, createCharge]);
-
-  useEffect(() => {
-    if (status !== "waiting" || !identifier) return;
-
-    const poll = async () => {
-      if (abortRef.current) return;
-      try {
-        const res = await fetch(`/api/payment/status/${identifier}`);
-        const data = await res.json();
-        if (abortRef.current) return;
-        if (data.status === "completed") setStatus("completed");
-        else if (data.status === "failed") { setStatus("failed"); setErrorMsg("Payment declined."); }
-        else if (data.status === "expired") setStatus("expired");
-      } catch { /* ignore */ }
-    };
-
-    poll();
-    const id = setInterval(poll, 5_000);
-    return () => clearInterval(id);
-  }, [status, identifier]);
-
-  const handleCopy = async () => {
-    if (!pixCode) return;
-    try {
-      await navigator.clipboard.writeText(pixCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2_000);
-    } catch { /* ignore */ }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-
-      <div
-        className="relative w-full max-w-[480px] overflow-hidden rounded-t-[24px] border border-gray-200 bg-white text-gray-900 sm:rounded-[24px]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">PAYMENT</p>
-            <h2 className="text-[18px] font-bold text-gray-900">PIX Checkout</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="max-h-[82vh] overflow-y-auto px-5 pb-6 pt-4">
-          <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-[56px] w-[56px] shrink-0 overflow-hidden rounded-full border-2 border-gray-200">
-                <img src={CREATOR.profileImg} alt="avatar" className="h-full w-full object-cover" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[17px] font-bold text-gray-900">{CREATOR.name}</p>
-                <p className="text-[13px] text-gray-500">{CREATOR.username}</p>
-                <div className="mt-2.5 rounded-xl bg-white border border-gray-100 px-3 py-2">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400">AMOUNT</p>
-                  <p className="mt-0.5 text-[24px] font-bold text-gray-900 leading-none">
-                    {formatBRL(planAmount)}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-gray-500">{planLabel}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
-            <h3 className="text-[14px] font-bold text-gray-900">What's included</h3>
-            <ul className="mt-3 space-y-2.5">
-              {FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-[13px] text-gray-600">
-                  <Check className="h-4 w-4 shrink-0 text-green-500" strokeWidth={2.5} />
-                  {f}
-                </li>
-              ))}
-            </ul>
-
-            <div className="my-4 border-t border-gray-200" />
-            <h3 className="text-[14px] font-bold text-gray-900">Payment method</h3>
-
-            {status === "creating" && (
-              <div className="flex flex-col items-center py-10">
-                <Loader2 className="h-9 w-9 animate-spin" style={{ color: OF_BLUE }} />
-                <p className="mt-4 text-sm text-gray-500">Generating PIX payment...</p>
-              </div>
-            )}
-
-            {(status === "failed" || status === "expired") && (
-              <div className="mt-4 flex flex-col items-center py-6 text-center">
-                <p className="text-sm text-gray-500">
-                  {status === "expired" ? "PIX expired." : (errorMsg ?? "Failed to generate PIX.")}
-                </p>
-                <button
-                  onClick={createCharge}
-                  className="mt-4 flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                >
-                  <RefreshCw className="h-4 w-4" /> Try again
-                </button>
-              </div>
-            )}
-
-            {status === "completed" && (
-              <div className="mt-4 flex flex-col items-center py-6 text-center">
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-full"
-                  style={{ background: `${OF_BLUE}18` }}
-                >
-                  <Check className="h-7 w-7" style={{ color: OF_BLUE }} strokeWidth={2.5} />
-                </div>
-                <p className="mt-3 text-[17px] font-bold text-gray-900">Payment confirmed!</p>
-                <p className="mt-1 text-sm text-gray-500">VIP access unlocked 🎉</p>
-              </div>
-            )}
-
-            {status === "waiting" && pixCode && (
-              <div className="mt-4 text-center">
-                <p className="text-[12px] font-semibold" style={{ color: OF_BLUE }}>PIX generated successfully</p>
-                <h4 className="mt-2 text-[16px] font-bold text-gray-900">Scan the QR Code</h4>
-
-                <div className="mt-4 flex justify-center">
-                  <div className="flex h-[200px] w-[200px] items-center justify-center overflow-hidden rounded-[14px] bg-white p-2 border border-gray-200 shadow-sm">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={qrUrl(pixCode)} alt="QR Code PIX" className="h-full w-full object-contain" />
-                  </div>
-                </div>
-
-                <p className="mt-4 text-[14px] font-semibold text-gray-800">Or copy the PIX code</p>
-                <div className="mt-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-left">
-                  <p className="line-clamp-2 break-all text-[12px] text-gray-500">{pixCode}</p>
-                </div>
-
-                <button
-                  onClick={handleCopy}
-                  className="mt-3 flex h-[46px] w-full items-center justify-center gap-2 rounded-full text-[14px] font-bold text-white transition hover:opacity-90"
-                  style={{ background: OF_BLUE }}
-                >
-                  <Copy className="h-4 w-4" />
-                  {copied ? "Code copied!" : "Copy PIX code"}
-                </button>
-
-                <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-3.5 text-left">
-                  <div className="flex items-start gap-2.5">
-                    <div
-                      className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                      style={{ background: OF_BLUE }}
-                    >
-                      i
-                    </div>
-                    <div>
-                      <p className="text-[13px] text-gray-600">
-                        Open your banking app, scan the QR Code or paste the PIX code to complete the payment.
-                      </p>
-                      <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-gray-400">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Waiting for payment confirmation...
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Social Icons ─────────────────────────────────────────────────────────────
-
 function InstagramIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
@@ -674,29 +367,41 @@ function TikTokIcon() {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-interface SelectedPlan {
-  label: string;
-  amount: number;
-}
-
 export default function YasminOFPage() {
-  const [plan, setPlan] = useState<SelectedPlan | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    fetch("https://ip-api.com/json/?fields=countryCode")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.countryCode && data.countryCode !== "BR") {
-          window.location.replace("https://privacy.millyfaria.fun/of");
-        }
-      })
-      .catch(() => {});
+    setIsLoading(false);
   }, []);
 
-  const openModal = (label: string, amount: number) => setPlan({ label, amount });
-  const closeModal = () => setPlan(null);
+  const handleSelectPlan = async (plan: typeof PLANS[0]) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: plan.id,
+          planAmount: plan.amount,
+          planLabel: plan.planLabel,
+          creatorName: CREATOR.name,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Erro ao iniciar checkout. Tente novamente.");
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert("Erro de conexão. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -704,19 +409,21 @@ export default function YasminOFPage() {
 
       <main className="min-h-screen bg-gray-100 pt-[52px]">
         <div className="mx-auto max-w-[480px] divide-y divide-gray-200 overflow-hidden bg-white shadow-sm">
-          <OFProfileCard />
-          <OFSubscribeBox />
-          <OFPlansSection />
-          <OFContentFeed onLockedClick={() => openModal(PLANS[0].planLabel, PLANS[0].amount)} />
+          <OFProfileCard onSubscribeClick={() => handleSelectPlan(PLANS[0])} />
+          <OFSubscribeBox onCheckout={() => handleSelectPlan(PLANS[0])} />
+          <OFPlansSection onSelectPlan={handleSelectPlan} />
+          <OFContentFeed onLockedClick={() => handleSelectPlan(PLANS[0])} />
         </div>
       </main>
 
-      <OFPixModal
-        isOpen={plan !== null}
-        onClose={closeModal}
-        planLabel={plan?.label ?? ""}
-        planAmount={plan?.amount ?? 0}
-      />
+      {isLoading && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
+            <p className="text-white text-sm">Iniciando checkout...</p>
+          </div>
+        </div>
+      )}
     </>
   );
 }

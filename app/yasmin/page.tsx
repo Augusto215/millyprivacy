@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Images, Play, UserCheck, Heart } from "lucide-react";
 import Header from "@/components/Header";
 import ProfileCard from "@/components/ProfileCard";
@@ -46,7 +47,25 @@ interface SelectedPlan {
 }
 
 export default function Yasmin() {
+  const router = useRouter();
   const [plan, setPlan] = useState<SelectedPlan | null>(null);
+
+  useEffect(() => {
+    async function checkLocation() {
+      try {
+        const res = await fetch("/api/geo/detect");
+        const data = await res.json();
+        if (!data.is_brazil) {
+          router.replace("/yasminof");
+          return;
+        }
+      } catch {
+        // Silently fail if geo detection doesn't work
+      }
+    }
+
+    checkLocation();
+  }, [router]);
 
   const openModal = (label: string, amount: number) => setPlan({ label, amount });
   const closeModal = () => setPlan(null);

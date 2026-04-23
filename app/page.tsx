@@ -21,13 +21,29 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    async function checkLocation() {
+      try {
+        const res = await fetch("/api/geo/detect");
+        const data = await res.json();
+        if (!data.is_brazil) {
+          router.replace("/of");
+          return;
+        }
+      } catch {
+        // Silently fail if geo detection doesn't work
+      }
+    }
+
     async function checkAuth() {
       const { data: userData } = await supabaseBrowser.auth.getUser();
       if (userData.user) {
         router.replace("/content/emilly");
+        return;
       }
       setMounted(true);
     }
+
+    checkLocation();
     checkAuth();
   }, [router]);
 
