@@ -31,12 +31,14 @@ export default function Home() {
       try {
         const res = await fetch("/api/check-country");
         const data = await res.json();
+        console.log("Country code:", data.countryCode);
         if (data.countryCode && data.countryCode !== "BR") {
+          console.log("Redirecting to /of");
           router.replace("/of");
           return;
         }
-      } catch {
-        // Se der erro ao detectar país, assume Brasil
+      } catch (error) {
+        console.error("Error checking country:", error);
       }
 
       setMounted(true);
