@@ -283,14 +283,15 @@ export default function PixModal({
                   className="w-full rounded-2xl border-2 border-[#e89c30] px-5 py-4 text-[16px] font-bold text-black transition hover:shadow-[0_0_20px_rgba(232,156,48,0.4)]"
                   style={{ background: "linear-gradient(90deg, #ffb163, #f5bc6a, #f8c97e, #e89c30)" }}
                 >
-                  ✓ PIX Instantâneo ({formatBRL(planAmount)})
+                  ✓ PIX Instantâneo
                 </button>
                 <button
                   onClick={handleSelectCard}
-                  className="w-full rounded-2xl border-2 border-[#3b82f6] bg-[#3b82f6] px-5 py-4 text-[16px] font-bold text-black transition hover:bg-[#2563eb] hover:border-[#2563eb] hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] flex items-center justify-center gap-2"
+                  className="w-full rounded-2xl border-2 border-[#3b82f6] px-5 py-4 text-[16px] font-bold text-black transition hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] flex items-center justify-center gap-2"
+                  style={{ background: "linear-gradient(90deg, #60a5fa, #3b82f6, #1e40af)" }}
                 >
                   <CreditCard className="h-5 w-5" />
-                  Cartão de Crédito ({formatBRL(planAmount)})
+                  Cartão de Crédito
                 </button>
               </div>
             )}
