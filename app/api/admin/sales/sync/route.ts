@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { getTransactionStatus } from "@/lib/syncpay";
+import { getTransactionStatus } from "@/lib/nexuspag";
 
 // POST /api/admin/sales/sync
-// Checks all pending sales against SyncPay and updates their status in the DB.
+// Checks all pending sales against NexusPag and updates their status in the DB.
 export async function POST(req: NextRequest) {
   // Verify admin session
   const cookie = req.cookies.get("admin_tok")?.value;
