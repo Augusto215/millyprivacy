@@ -230,8 +230,7 @@ export default function ContentPage() {
 
       {/* Live Modal */}
       {isLiveOpen && (
-        <LiveViewer 
-          onClose={() => setIsLiveOpen(false)}
+        <LiveViewer
           creatorName={creatorLabel}
           creatorImg={profileImg}
         />
