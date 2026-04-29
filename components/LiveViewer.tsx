@@ -41,6 +41,38 @@ export default function LiveViewer({
   viewerCount: initialViewerCount = 846,
 }: LiveViewerProps) {
   const router = useRouter();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const preventInteraction = (e: Event) => {
+      e.preventDefault();
+    };
+
+    const handleSeeking = () => {
+      video.currentTime = video.duration || 0;
+    };
+
+    const handlePlay = () => {
+      if (video.paused) {
+        video.play().catch(() => {});
+      }
+    };
+
+    video.addEventListener('seeking', handleSeeking);
+    video.addEventListener('pause', handlePlay);
+    video.addEventListener('dblclick', preventInteraction);
+    video.addEventListener('touchstart', preventInteraction as EventListener);
+
+    return () => {
+      video.removeEventListener('seeking', handleSeeking);
+      video.removeEventListener('pause', handlePlay);
+      video.removeEventListener('dblclick', preventInteraction);
+      video.removeEventListener('touchstart', preventInteraction as EventListener);
+    };
+  }, []);
 
   const handleClose = () => {
     router.push("/");
@@ -251,31 +283,24 @@ const comments = [
       {/* Video Background */}
       <div className="absolute inset-0 overflow-hidden">
         <video
-          ref={(video) => {
-            if (video) {
-              video.addEventListener('seeking', (e) => {
-                e.preventDefault();
-                video.currentTime = video.duration;
-              });
-              video.addEventListener('pause', (e) => {
-                e.preventDefault();
-                video.play();
-              });
-              video.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-              });
-            }
-          }}
+          ref={videoRef}
           autoPlay
           muted
           loop
           playsInline
+          disablePictureInPicture
+          controlsList="nodownload nofullscreen noremoteplayback"
           className="h-full w-full object-cover blur-sm"
           src={videoUrl}
-          controlsList="nodownload nofullscreen noremoteplayback"
-          style={{ WebkitPlaysinline: 'true' } as any}
+          style={{
+            WebkitPlaysinline: 'true',
+            WebkitUserSelect: 'none',
+            WebkitTouchCallout: 'none'
+          } as any}
         />
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-black/50 pointer-events-none" />
+        {/* Block click overlay */}
+        <div className="absolute inset-0 z-20" style={{ pointerEvents: 'auto', WebkitTouchCallout: 'none' }} />
       </div>
 
       {/* Floating Hearts */}
