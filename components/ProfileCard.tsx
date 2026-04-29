@@ -23,6 +23,7 @@ interface ProfileCardProps {
   coverClass?: string;
   coverImg?: string;
   onLiveClick?: () => void;
+  showLiveBorder?: boolean;
 }
 
 export default function ProfileCard({
@@ -34,6 +35,7 @@ export default function ProfileCard({
   coverClass = "cover-bg",
   coverImg,
   onLiveClick,
+  showLiveBorder = true,
 }: ProfileCardProps) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
@@ -77,7 +79,7 @@ export default function ProfileCard({
         <div className="absolute -bottom-8 left-4">
           <button
             onClick={handleLiveClick}
-            className="rounded-full hover:scale-105 transition-transform cursor-pointer flex items-center justify-center"
+            className={showLiveBorder ? "live-border rounded-full hover:scale-105 transition-transform cursor-pointer flex items-center justify-center" : "rounded-full hover:scale-105 transition-transform cursor-pointer flex items-center justify-center"}
             style={{ width: "96px", height: "96px" }}
             title="Clique para assistir ao live"
           >
@@ -85,7 +87,16 @@ export default function ProfileCard({
               <img src={profileImg} alt="avatar" className="h-full w-full object-cover" />
             </div>
           </button>
-          {/* Live Badge - Hidden */}
+          {/* Live Badge */}
+          {showLiveBorder && (
+            <div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 flex items-center gap-1 bg-orange-400 rounded px-2 py-1 text-white text-[11px] font-bold shadow-lg whitespace-nowrap"
+              title="AO VIVO"
+            >
+              <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+              AO VIVO
+            </div>
+          )}
         </div>
       </div>
 

@@ -65,6 +65,7 @@ export default function Yasmin() {
             stats={CREATOR.stats}
             profileImg={CREATOR.profileImg}
             coverImg={CREATOR.coverImg}
+            showLiveBorder={false}
           />
 
           <SubscribeBox
