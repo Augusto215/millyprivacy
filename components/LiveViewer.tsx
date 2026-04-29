@@ -132,6 +132,7 @@ const comments = [
           amount: PLAN_AMOUNT,
           description: `Assinatura ${PLAN_LABEL} — Milly Privacy`,
           creator: creatorName,
+          isLive: true,
         }),
       });
 
@@ -250,11 +251,29 @@ const comments = [
       {/* Video Background */}
       <div className="absolute inset-0 overflow-hidden">
         <video
+          ref={(video) => {
+            if (video) {
+              video.addEventListener('seeking', (e) => {
+                e.preventDefault();
+                video.currentTime = video.duration;
+              });
+              video.addEventListener('pause', (e) => {
+                e.preventDefault();
+                video.play();
+              });
+              video.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+              });
+            }
+          }}
           autoPlay
           muted
           loop
+          playsInline
           className="h-full w-full object-cover blur-sm"
           src={videoUrl}
+          controlsList="nodownload nofullscreen noremoteplayback"
+          style={{ WebkitPlaysinline: 'true' } as any}
         />
         <div className="absolute inset-0 bg-black/50" />
       </div>

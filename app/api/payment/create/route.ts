@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
-    const { amount, description, creator } = await req.json();
+    const { amount, description, creator, isLive } = await req.json();
 
     if (!amount || typeof amount !== "number" || amount <= 0) {
       return NextResponse.json({ error: "Valor inválido." }, { status: 400 });
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     // Salva o identifier junto com o creator para o webhook conseguir identificar a página
     if (creator) {
       await supabaseAdmin.from("sales").upsert(
-        { identifier: data.identifier, creator, amount, status: "pending" },
+        { identifier: data.identifier, creator, amount, status: "pending", is_live: isLive ?? false },
         { onConflict: "identifier" }
       );
     }

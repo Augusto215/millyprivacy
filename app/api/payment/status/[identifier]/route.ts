@@ -22,6 +22,13 @@ export async function GET(
     const data = await getTransactionStatus(identifier);
 
     if (data.status === "completed") {
+      // Fetch sale info to check if it's a live purchase
+      const { data: saleData } = await supabaseAdmin
+        .from("sales")
+        .select("is_live")
+        .eq("identifier", identifier)
+        .single();
+
       // Update sale status in DB
       await supabaseAdmin
         .from("sales")
@@ -31,7 +38,7 @@ export async function GET(
       // Send Telegram notification only once per payment
       if (!notified.has(identifier)) {
         notified.add(identifier);
-        await sendSaleNotification(data.amount, identifier, page, plan);
+        await sendSaleNotification(data.amount, identifier, page, plan, null, saleData?.is_live ?? false);
       }
     } else if ((data.status as string) === "failed" || (data.status as string) === "expired") {
       await supabaseAdmin
