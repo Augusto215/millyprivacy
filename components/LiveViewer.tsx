@@ -42,6 +42,14 @@ export default function LiveViewer({
 }: LiveViewerProps) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isTikTokBrowser, setIsTikTokBrowser] = useState(false);
+
+  useEffect(() => {
+    // Detectar se está acessando via TikTok
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    const isTikTok = userAgent.includes('TikTok') || userAgent.includes('Musical.ly');
+    setIsTikTokBrowser(isTikTok);
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -61,18 +69,42 @@ export default function LiveViewer({
       }
     };
 
-    video.addEventListener('seeking', handleSeeking);
-    video.addEventListener('pause', handlePlay);
-    video.addEventListener('dblclick', preventInteraction);
-    video.addEventListener('touchstart', preventInteraction as EventListener);
+    // Listener mais agressivos para TikTok
+    const handlers = [
+      { event: 'seeking', handler: handleSeeking },
+      { event: 'pause', handler: handlePlay },
+      { event: 'dblclick', handler: preventInteraction },
+      { event: 'touchstart', handler: preventInteraction as EventListener },
+      { event: 'touchmove', handler: preventInteraction as EventListener },
+      { event: 'touchend', handler: preventInteraction as EventListener },
+    ];
+
+    handlers.forEach(({ event, handler }) => {
+      video.addEventListener(event, handler);
+    });
+
+    // Para TikTok, força play contínuo
+    if (isTikTokBrowser) {
+      const forcePlay = setInterval(() => {
+        if (video.paused) {
+          video.play().catch(() => {});
+        }
+      }, 500);
+
+      return () => {
+        clearInterval(forcePlay);
+        handlers.forEach(({ event, handler }) => {
+          video.removeEventListener(event, handler);
+        });
+      };
+    }
 
     return () => {
-      video.removeEventListener('seeking', handleSeeking);
-      video.removeEventListener('pause', handlePlay);
-      video.removeEventListener('dblclick', preventInteraction);
-      video.removeEventListener('touchstart', preventInteraction as EventListener);
+      handlers.forEach(({ event, handler }) => {
+        video.removeEventListener(event, handler);
+      });
     };
-  }, []);
+  }, [isTikTokBrowser]);
 
   const handleClose = () => {
     router.push("/");
@@ -278,10 +310,26 @@ const comments = [
         .comment-item {
           animation: slideInUp 0.3s ease-out;
         }
+
+        /* Bloquear controles em TikTok WebView */
+        video {
+          -webkit-user-select: none;
+          -webkit-touch-callout: none;
+          user-select: none;
+          touch-action: none;
+        }
+
+        video::-webkit-media-controls {
+          display: none !important;
+        }
+
+        video::-moz-media-controls {
+          display: none !important;
+        }
       `}</style>
 
       {/* Video Background */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden" style={{ touchAction: 'none' }}>
         <video
           ref={videoRef}
           autoPlay
@@ -292,15 +340,16 @@ const comments = [
           controlsList="nodownload nofullscreen noremoteplayback"
           className="h-full w-full object-cover blur-sm"
           src={videoUrl}
+          onContextMenu={(e) => e.preventDefault()}
           style={{
             WebkitPlaysinline: 'true',
             WebkitUserSelect: 'none',
-            WebkitTouchCallout: 'none'
+            WebkitTouchCallout: 'none',
+            touchAction: 'none',
+            WebkitAppearance: 'none'
           } as any}
         />
         <div className="absolute inset-0 bg-black/50 pointer-events-none" />
-        {/* Block click overlay */}
-        <div className="absolute inset-0 z-20" style={{ pointerEvents: 'auto', WebkitTouchCallout: 'none' }} />
       </div>
 
       {/* Floating Hearts */}
