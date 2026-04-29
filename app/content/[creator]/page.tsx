@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { Lock, LogOut, Loader2, Heart, MessageCircle, Video } from "lucide-react";
 import Header from "@/components/Header";
+import LiveViewer from "@/components/LiveViewer";
 
 interface ContentBlock {
   id: string;
@@ -46,6 +47,7 @@ export default function ContentPage() {
   const [blocks, setBlocks] = useState<ContentBlock[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLiveOpen, setIsLiveOpen] = useState(false);
 
   const loadContent = useCallback(async (accessToken: string) => {
     const res = await fetch(`/api/content/${creator}`, {
@@ -157,6 +159,15 @@ export default function ContentPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsLiveOpen(true)}
+                className="flex items-center gap-1.5 rounded-xl border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-[13px] text-orange-600 hover:bg-orange-500/20 transition"
+              >
+                <div className="relative flex items-center gap-1">
+                  <div className="h-2 w-2 rounded-full bg-orange-600 animate-pulse" />
+                  Assistir AO VIVO
+                </div>
+              </button>
               {CREATOR_WHATSAPP[creator] && (
                 <a
                   href={CREATOR_WHATSAPP[creator]}
@@ -216,6 +227,15 @@ export default function ContentPage() {
           )}
         </div>
       </div>
+
+      {/* Live Modal */}
+      {isLiveOpen && (
+        <LiveViewer 
+          onClose={() => setIsLiveOpen(false)}
+          creatorName={creatorLabel}
+          creatorImg={profileImg}
+        />
+      )}
     </>
   );
 }

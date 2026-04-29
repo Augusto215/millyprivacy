@@ -3,6 +3,7 @@
 import { MoreVertical, Images, Play, UserCheck, Heart } from "lucide-react";
 import React from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const DEFAULT_STATS = [
   { icon: Images,    value: "159" },
@@ -21,6 +22,7 @@ interface ProfileCardProps {
   profileImg?: string;
   coverClass?: string;
   coverImg?: string;
+  onLiveClick?: () => void;
 }
 
 export default function ProfileCard({
@@ -31,21 +33,66 @@ export default function ProfileCard({
   profileImg = "img/profile-img.png",
   coverClass = "cover-bg",
   coverImg,
+  onLiveClick,
 }: ProfileCardProps) {
+  const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const short = bio.slice(0, 120);
 
+  const handleLiveClick = () => {
+    if (onLiveClick) {
+      onLiveClick();
+    } else {
+      router.push("/live");
+    }
+  };
+
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+      <style>{`
+        @keyframes liveGradientShadow {
+          0% { 
+            box-shadow: 0 0 0 3px #ff6b35, 0 0 20px 3px rgba(255, 107, 53, 0.3);
+          }
+          50% { 
+            box-shadow: 0 0 0 3px #ffa500, 0 0 20px 3px rgba(255, 165, 0, 0.3);
+          }
+          100% { 
+            box-shadow: 0 0 0 3px #ff6b35, 0 0 20px 3px rgba(255, 107, 53, 0.3);
+          }
+        }
+        .live-border {
+          border-radius: 50%;
+          animation: liveGradientShadow 3s ease infinite;
+        }
+      `}</style>
+
       {/* Cover */}
       <div className="relative h-50 w-full bg-gradient-to-br from-[#f0f0f0] via-[#e0e0e0] to-[#d0d0d0] sm:h-32">
         <div
           className={`${coverImg ? "" : coverClass} absolute inset-0 opacity-100`}
           style={coverImg ? { backgroundImage: `url('${coverImg}')`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
         />
-        {/* Avatar */}
-        <div className="absolute -bottom-8 left-4 h-24 w-24 overflow-hidden rounded-full border-[3px] border-white bg-gray-200">
-          <img src={profileImg} alt="avatar" className="h-full w-full object-cover" />
+        {/* Avatar with Live Border */}
+        <div className="absolute -bottom-8 left-4">
+          <button
+            onClick={handleLiveClick}
+            className="live-border rounded-full hover:scale-105 transition-transform cursor-pointer flex items-center justify-center"
+            style={{ width: "96px", height: "96px" }}
+            title="Clique para assistir ao live"
+          >
+            <div className="h-[96px] w-[96px] overflow-hidden rounded-full border-[3px] border-white bg-gray-200">
+              <img src={profileImg} alt="avatar" className="h-full w-full object-cover" />
+            </div>
+          </button>
+          {/* Live Badge */}
+          <div
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 flex items-center gap-1 bg-orange-400 rounded px-2 py-1 text-white text-[11px] font-bold shadow-lg whitespace-nowrap"
+            title="AO VIVO"
+          >
+            <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+            AO VIVO
+          </div>
         </div>
       </div>
 

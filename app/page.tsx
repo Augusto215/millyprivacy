@@ -18,16 +18,22 @@ interface SelectedPlan {
 export default function Home() {
   const router = useRouter();
   const [plan, setPlan] = useState<SelectedPlan | null>(null);
-  const [mounted, setMounted] = useState(false);
 
+  // Check auth immediately
   useEffect(() => {
-    async function checkAuthAndLocation() {
+    async function checkAuth() {
       const { data: userData } = await supabaseBrowser.auth.getUser();
       if (userData.user) {
         router.replace("/content/emilly");
-        return;
       }
+    }
 
+    checkAuth();
+  }, [router]);
+
+  // Check country in background (doesn't block rendering)
+  useEffect(() => {
+    async function checkCountry() {
       try {
         const res = await fetch("/api/check-country");
         const data = await res.json();
@@ -35,19 +41,14 @@ export default function Home() {
         if (data.countryCode && data.countryCode !== "BR") {
           console.log("Redirecting to /of");
           router.replace("/of");
-          return;
         }
       } catch (error) {
         console.error("Error checking country:", error);
       }
-
-      setMounted(true);
     }
 
-    checkAuthAndLocation();
+    checkCountry();
   }, [router]);
-
-  if (!mounted) return null;
 
   const openModal = (label: string, amount: number) =>
     setPlan({ label, amount });
