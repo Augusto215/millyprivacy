@@ -1,4 +1,5 @@
 const BASE_URL = "https://nexuspag.com";
+const MINIMUM_AMOUNT = 13.87;
 
 export interface CreatePixChargeResponse {
   success: boolean;
@@ -36,6 +37,10 @@ export async function createPixCharge(
   description: string,
   external_id?: string
 ): Promise<PixChargeResponse> {
+  if (amount < MINIMUM_AMOUNT) {
+    throw new Error(`Valor mínimo de R$ ${MINIMUM_AMOUNT} não atingido.`);
+  }
+
   const apiKey = process.env.NEXUSPAG_API_KEY;
   if (!apiKey) {
     throw new Error("NEXUSPAG_API_KEY not configured");

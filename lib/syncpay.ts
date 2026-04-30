@@ -35,10 +35,15 @@ export interface CashInResponse {
   identifier: string;
 }
 
+const MINIMUM_AMOUNT = 13.87;
+
 export async function createPixCharge(
   amount: number,
   description: string
 ): Promise<CashInResponse> {
+  if (amount < MINIMUM_AMOUNT) {
+    throw new Error(`Valor mínimo de R$ ${MINIMUM_AMOUNT} não atingido.`);
+  }
   const token = await getAccessToken();
   const webhookUrl =
     (process.env.NEXT_PUBLIC_APP_URL ?? "https://millyprivacy.com") +
