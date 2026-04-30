@@ -9,14 +9,23 @@ export async function GET(request: NextRequest) {
 
     console.log("[check-country] IP detected:", ip);
 
-    const res = await fetch(`https://ipapi.co/${ip}/json/`);
+    const res = await fetch(`http://ip-api.com/json/${ip}`);
     const data = await res.json();
 
     console.log("[check-country] API response:", data);
 
+    // Se for IP reservado (localhost/desenvolvimento), retorna BR por padrão
+    if (data.status === "fail") {
+      console.log("[check-country] Usando BR como padrão (IP reservado/local)");
+      return NextResponse.json({
+        countryCode: "BR",
+        country_name: "Brazil"
+      });
+    }
+
     return NextResponse.json({
-      countryCode: data.country_code || "BR",
-      country_name: data.country_name
+      countryCode: data.countryCode || "BR",
+      country_name: data.country || "Brazil"
     });
   } catch (error) {
     console.error("Error checking country:", error);

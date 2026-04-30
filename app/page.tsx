@@ -31,23 +31,27 @@ export default function Home() {
     checkAuth();
   }, [router]);
 
-  // Check country in background (doesn't block rendering)
+  // Check country after page loads (with delay to allow page to render first)
   useEffect(() => {
-    async function checkCountry() {
-      try {
-        const res = await fetch("/api/check-country");
-        const data = await res.json();
-        console.log("Country code:", data.countryCode);
-        if (data.countryCode && data.countryCode !== "BR") {
-          console.log("Redirecting to /of");
-          router.replace("/of");
+    const timer = setTimeout(() => {
+      async function checkCountry() {
+        try {
+          const res = await fetch("/api/check-country");
+          const data = await res.json();
+          console.log("Country code:", data.countryCode);
+          if (data.countryCode && data.countryCode !== "BR") {
+            console.log("Redirecting to /of");
+            router.replace("/of");
+          }
+        } catch (error) {
+          console.error("Error checking country:", error);
         }
-      } catch (error) {
-        console.error("Error checking country:", error);
       }
-    }
 
-    checkCountry();
+      checkCountry();
+    }, 1000); // Wait 1 second before checking country
+
+    return () => clearTimeout(timer);
   }, [router]);
 
   const openModal = (label: string, amount: number) =>
