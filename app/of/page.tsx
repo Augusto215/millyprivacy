@@ -418,11 +418,11 @@ function TikTokIcon() {
 
 export default function OFPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { currency } = useLocalization();
+  const { currency, countryCode } = useLocalization();
 
   useEffect(() => {
-    setIsLoading(false);
-  }, []);
+    console.log("OFPage: Currency updated to:", currency, "Country:", countryCode);
+  }, [currency, countryCode]);
 
   const handleSelectPlan = async (plan: typeof BASE_PLANS[0] & { price: string; amount: number }) => {
     setIsLoading(true);
