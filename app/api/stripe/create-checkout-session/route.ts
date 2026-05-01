@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { Currency } from "@/lib/localization";
 
 export async function POST(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   try {
-    const { planId, planAmount, planLabel, creatorName } = await req.json();
+    const { planId, planAmount, planLabel, creatorName, currency = "usd" } = await req.json();
 
     if (!planId || !planAmount || !planLabel || !creatorName) {
       return NextResponse.json(
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: currency as string,
             product_data: {
               name: `${creatorName} - ${planLabel}`,
               description: "OnlyFans Subscription",

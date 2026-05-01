@@ -17,6 +17,8 @@ import {
   Grid3X3,
   Sparkles,
 } from "lucide-react";
+import { useLocalization } from "@/hooks/useLocalization";
+import { convertPrice, formatPrice, Currency } from "@/lib/localization";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -34,10 +36,10 @@ const STATS = [
   { icon: Heart,     value: "364.6K" },
 ];
 
-const PLANS = [
-  { id: "monthly",   label: "1 Month",              price: "$4.87",  amount: 4.87,  planLabel: "1 Month (26% off)" },
-  { id: "quarterly", label: "3 Months (16% off)",   price: "$9.87",  amount: 9.87,  planLabel: "3 Months (32% off)" },
-  { id: "lifetime",  label: "Lifetime (50% off)",   price: "$35.90",  amount: 35.90,  planLabel: "Lifetime (50% off)" },
+const BASE_PLANS = [
+  { id: "monthly",   label: "1 Month",              amount: 4.87,  planLabel: "1 Month (26% off)" },
+  { id: "quarterly", label: "3 Months (16% off)",   amount: 9.87,  planLabel: "3 Months (32% off)" },
+  { id: "lifetime",  label: "Lifetime (50% off)",   amount: 35.90,  planLabel: "Lifetime (50% off)" },
 ];
 
 const FEED_ITEMS = [
@@ -173,8 +175,9 @@ function OFProfileCard({ onSubscribeClick }: { onSubscribeClick: () => void }) {
 
 // ─── Subscribe Box ─────────────────────────────────────────────────────────────
 
-function OFSubscribeBox({ onCheckout }: { onCheckout: () => void }) {
+function OFSubscribeBox({ onCheckout, currency }: { onCheckout: () => void; currency: Currency }) {
   const { d, h, m, s } = useCountdown(1 * 24 * 3600 + 4 * 3600 + 59 * 60 + 10);
+  const priceDisplay = formatPrice(convertPrice(4.87, "usd", currency), currency);
 
   return (
     <div className="border-b border-gray-200 bg-white p-4 space-y-3">
@@ -204,7 +207,7 @@ function OFSubscribeBox({ onCheckout }: { onCheckout: () => void }) {
           className="block w-full rounded-full py-3.5 text-center text-[15px] font-bold text-white transition hover:opacity-90"
           style={{ background: OF_BLUE }}
         >
-          Subscribe now — $4.87/month
+          Subscribe now — {priceDisplay}/month
         </button>
       </div>
 
@@ -225,8 +228,17 @@ function OFSubscribeBox({ onCheckout }: { onCheckout: () => void }) {
 
 // ─── Plans Section ────────────────────────────────────────────────────────────
 
-function OFPlansSection({ onSelectPlan }: { onSelectPlan: (plan: typeof PLANS[0]) => void }) {
+function OFPlansSection({ onSelectPlan, currency }: { onSelectPlan: (plan: typeof BASE_PLANS[0] & { price: string; amount: number }) => void; currency: Currency }) {
   const [open, setOpen] = useState(true);
+
+  const plans = BASE_PLANS.map((plan) => {
+    const convertedAmount = convertPrice(plan.amount, "usd", currency);
+    return {
+      ...plan,
+      price: formatPrice(convertedAmount, currency),
+      amount: convertedAmount,
+    };
+  });
 
   return (
     <div className="border-b border-gray-200 bg-white">
@@ -240,7 +252,7 @@ function OFPlansSection({ onSelectPlan }: { onSelectPlan: (plan: typeof PLANS[0]
 
       {open && (
         <div className="px-4 pb-4 space-y-2">
-          {PLANS.map((plan) => (
+          {plans.map((plan) => (
             <button
               key={plan.id}
               onClick={() => onSelectPlan(plan)}
@@ -406,12 +418,13 @@ function TikTokIcon() {
 
 export default function OFPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const { currency } = useLocalization();
 
   useEffect(() => {
     setIsLoading(false);
   }, []);
 
-  const handleSelectPlan = async (plan: typeof PLANS[0]) => {
+  const handleSelectPlan = async (plan: typeof BASE_PLANS[0] & { price: string; amount: number }) => {
     setIsLoading(true);
     try {
       const res = await fetch("/api/stripe/create-checkout-session", {
@@ -422,6 +435,7 @@ export default function OFPage() {
           planAmount: plan.amount,
           planLabel: plan.planLabel,
           creatorName: CREATOR.name,
+          currency,
         }),
       });
 
@@ -440,16 +454,21 @@ export default function OFPage() {
     }
   };
 
+  const firstPlanPrice = formatPrice(
+    convertPrice(BASE_PLANS[0].amount, "usd", currency),
+    currency
+  );
+
   return (
     <>
       <OFHeader />
 
       <main className="min-h-screen bg-gray-100 pt-[52px]">
         <div className="mx-auto max-w-[480px] divide-y divide-gray-200 overflow-hidden bg-white shadow-sm">
-          <OFProfileCard onSubscribeClick={() => handleSelectPlan(PLANS[0])} />
-          <OFSubscribeBox onCheckout={() => handleSelectPlan(PLANS[0])} />
-          <OFPlansSection onSelectPlan={handleSelectPlan} />
-          <OFContentFeed onLockedClick={() => handleSelectPlan(PLANS[0])} />
+          <OFProfileCard onSubscribeClick={() => handleSelectPlan({ ...BASE_PLANS[0], price: firstPlanPrice, amount: convertPrice(BASE_PLANS[0].amount, "usd", currency) })} />
+          <OFSubscribeBox onCheckout={() => handleSelectPlan({ ...BASE_PLANS[0], price: firstPlanPrice, amount: convertPrice(BASE_PLANS[0].amount, "usd", currency) })} currency={currency} />
+          <OFPlansSection onSelectPlan={handleSelectPlan} currency={currency} />
+          <OFContentFeed onLockedClick={() => handleSelectPlan({ ...BASE_PLANS[0], price: firstPlanPrice, amount: convertPrice(BASE_PLANS[0].amount, "usd", currency) })} />
         </div>
       </main>
 
