@@ -1,5 +1,5 @@
-export type Currency = "usd" | "eur" | "try" | "gbp" | "inr" | "cny" | "chf";
-export type Language = "en" | "pt" | "tr" | "es" | "hi" | "zh";
+export type Currency = "usd" | "eur" | "try" | "gbp" | "inr" | "cny" | "chf" | "cad" | "jpy" | "mxn" | "nok" | "pln" | "ron" | "sgd";
+export type Language = "en" | "pt" | "tr" | "es" | "hi" | "zh" | "ja" | "nl" | "pl";
 
 interface LocalizationConfig {
   currency: Currency;
@@ -16,6 +16,13 @@ export const EXCHANGE_RATES: Record<Currency, number> = {
   inr: 83.5,
   cny: 7.24,
   chf: 0.88,
+  cad: 1.36,
+  jpy: 149.5,
+  mxn: 17.2,
+  nok: 10.8,
+  pln: 4.0,
+  ron: 4.6,
+  sgd: 1.35,
 };
 
 export const CURRENCY_SYMBOLS: Record<Currency, string> = {
@@ -26,24 +33,37 @@ export const CURRENCY_SYMBOLS: Record<Currency, string> = {
   inr: "₹",
   cny: "¥",
   chf: "CHF",
+  cad: "C$",
+  jpy: "¥",
+  mxn: "$",
+  nok: "kr",
+  pln: "zł",
+  ron: "lei",
+  sgd: "S$",
 };
 
 // Country to localization mapping
 const COUNTRY_LOCALIZATION: Record<string, LocalizationConfig> = {
   US: { currency: "usd", language: "en", countryCode: "US" },
-  CA: { currency: "usd", language: "en", countryCode: "CA" },
+  CA: { currency: "cad", language: "en", countryCode: "CA" },
   GB: { currency: "gbp", language: "en", countryCode: "GB" },
   DE: { currency: "eur", language: "en", countryCode: "DE" },
   FR: { currency: "eur", language: "en", countryCode: "FR" },
   ES: { currency: "eur", language: "es", countryCode: "ES" },
   IT: { currency: "eur", language: "en", countryCode: "IT" },
-  NL: { currency: "eur", language: "en", countryCode: "NL" },
+  NL: { currency: "eur", language: "nl", countryCode: "NL" },
   TR: { currency: "try", language: "tr", countryCode: "TR" },
   BR: { currency: "usd", language: "pt", countryCode: "BR" },
   PT: { currency: "eur", language: "pt", countryCode: "PT" },
   IN: { currency: "inr", language: "hi", countryCode: "IN" },
   CN: { currency: "cny", language: "zh", countryCode: "CN" },
   CH: { currency: "chf", language: "en", countryCode: "CH" },
+  JP: { currency: "jpy", language: "ja", countryCode: "JP" },
+  MX: { currency: "mxn", language: "es", countryCode: "MX" },
+  NO: { currency: "nok", language: "en", countryCode: "NO" },
+  PL: { currency: "pln", language: "pl", countryCode: "PL" },
+  RO: { currency: "ron", language: "en", countryCode: "RO" },
+  SG: { currency: "sgd", language: "en", countryCode: "SG" },
 };
 
 export function getLocalizationFromCountry(
