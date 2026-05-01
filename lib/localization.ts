@@ -35,7 +35,7 @@ export const CURRENCY_SYMBOLS: Record<Currency, string> = {
   chf: "CHF",
   cad: "C$",
   jpy: "¥",
-  mxn: "$",
+  mxn: "MEX$",
   nok: "kr",
   pln: "zł",
   ron: "lei",

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useLocalization } from "@/hooks/useLocalization";
 import { convertPrice, formatPrice, Currency } from "@/lib/localization";
+import { getTranslation } from "@/lib/translations";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -175,7 +176,7 @@ function OFProfileCard({ onSubscribeClick }: { onSubscribeClick: () => void }) {
 
 // ─── Subscribe Box ─────────────────────────────────────────────────────────────
 
-function OFSubscribeBox({ onCheckout, currency }: { onCheckout: () => void; currency: Currency }) {
+function OFSubscribeBox({ onCheckout, currency, language }: { onCheckout: () => void; currency: Currency; language: string }) {
   const { d, h, m, s } = useCountdown(1 * 24 * 3600 + 4 * 3600 + 59 * 60 + 10);
   const priceDisplay = formatPrice(convertPrice(4.87, "usd", currency), currency);
 
@@ -184,30 +185,30 @@ function OFSubscribeBox({ onCheckout, currency }: { onCheckout: () => void; curr
       {/* Header */}
       <div className="flex items-center gap-1.5">
         <Sparkles className="h-4 w-4" style={{ color: OF_BLUE }} />
-        <p className="text-[16px] font-bold text-gray-900">Limited Time Offer</p>
+        <p className="text-[16px] font-bold text-gray-900">{getTranslation(language as any, "limitedTimeOffer")}</p>
       </div>
       <p className="text-[12px] text-gray-500">
-        Ends in {d}d {h}h {m}m {String(s).padStart(2, "0")}s
+        {getTranslation(language as any, "endsIn")} {d}d {h}h {m}m {String(s).padStart(2, "0")}s
       </p>
 
       {/* Description */}
       <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
         <p className="text-[14px] text-gray-700">
-          Exclusive access with daily updates, private chats and intimate conversations.
+          {getTranslation(language as any, "exclusiveAccess")}
         </p>
       </div>
 
       {/* CTA */}
       <div className="relative">
         <span className="absolute -top-2.5 left-3 z-10 rounded-full bg-green-400 px-2.5 py-0.5 text-[12px] font-bold text-white">
-          Save 26%
+          {getTranslation(language as any, "save")} 26%
         </span>
         <button
           onClick={onCheckout}
           className="block w-full rounded-full py-3.5 text-center text-[15px] font-bold text-white transition hover:opacity-90"
           style={{ background: OF_BLUE }}
         >
-          Subscribe now — {priceDisplay}/month
+          {getTranslation(language as any, "subscribeNow")} — {priceDisplay}/{getTranslation(language as any, "month").toLowerCase()}
         </button>
       </div>
 
@@ -216,11 +217,11 @@ function OFSubscribeBox({ onCheckout, currency }: { onCheckout: () => void; curr
         onClick={onCheckout}
         className="block w-full rounded-full border border-gray-300 bg-white py-3 text-center text-[14px] font-semibold text-gray-700 transition hover:bg-gray-50"
       >
-        ★ Call Milly now?
+        {getTranslation(language as any, "callMilly")}
       </button>
 
       <p className="text-right text-[11px] text-gray-400">
-        Original price <span className="line-through">R$ 16.47</span>
+        {getTranslation(language as any, "originalPrice")} <span className="line-through">R$ 16.47</span>
       </p>
     </div>
   );
@@ -228,7 +229,7 @@ function OFSubscribeBox({ onCheckout, currency }: { onCheckout: () => void; curr
 
 // ─── Plans Section ────────────────────────────────────────────────────────────
 
-function OFPlansSection({ onSelectPlan, currency }: { onSelectPlan: (plan: typeof BASE_PLANS[0] & { price: string; amount: number }) => void; currency: Currency }) {
+function OFPlansSection({ onSelectPlan, currency, language }: { onSelectPlan: (plan: typeof BASE_PLANS[0] & { price: string; amount: number }) => void; currency: Currency; language: string }) {
   const [open, setOpen] = useState(true);
 
   const plans = BASE_PLANS.map((plan) => {
@@ -246,7 +247,7 @@ function OFPlansSection({ onSelectPlan, currency }: { onSelectPlan: (plan: typeo
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between px-4 py-3.5 transition hover:bg-gray-50"
       >
-        <p className="text-[16px] font-bold text-gray-900">Subscription Plans</p>
+        <p className="text-[16px] font-bold text-gray-900">{getTranslation(language as any, "subscriptionPlans")}</p>
         <ChevronUp className={`h-4 w-4 text-gray-400 transition-transform ${open ? "" : "rotate-180"}`} />
       </button>
 
@@ -418,7 +419,7 @@ function TikTokIcon() {
 
 export default function OFPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { currency, countryCode } = useLocalization();
+  const { currency, countryCode, language } = useLocalization();
 
   useEffect(() => {
     console.log("OFPage: Currency updated to:", currency, "Country:", countryCode);
@@ -466,8 +467,8 @@ export default function OFPage() {
       <main className="min-h-screen bg-gray-100 pt-[52px]">
         <div className="mx-auto max-w-[480px] divide-y divide-gray-200 overflow-hidden bg-white shadow-sm">
           <OFProfileCard onSubscribeClick={() => handleSelectPlan({ ...BASE_PLANS[0], price: firstPlanPrice, amount: convertPrice(BASE_PLANS[0].amount, "usd", currency) })} />
-          <OFSubscribeBox onCheckout={() => handleSelectPlan({ ...BASE_PLANS[0], price: firstPlanPrice, amount: convertPrice(BASE_PLANS[0].amount, "usd", currency) })} currency={currency} />
-          <OFPlansSection onSelectPlan={handleSelectPlan} currency={currency} />
+          <OFSubscribeBox onCheckout={() => handleSelectPlan({ ...BASE_PLANS[0], price: firstPlanPrice, amount: convertPrice(BASE_PLANS[0].amount, "usd", currency) })} currency={currency} language={language} />
+          <OFPlansSection onSelectPlan={handleSelectPlan} currency={currency} language={language} />
           <OFContentFeed onLockedClick={() => handleSelectPlan({ ...BASE_PLANS[0], price: firstPlanPrice, amount: convertPrice(BASE_PLANS[0].amount, "usd", currency) })} />
         </div>
       </main>
