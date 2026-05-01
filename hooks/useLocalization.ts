@@ -8,6 +8,10 @@ interface UseLocalizationReturn {
   isLoading: boolean;
 }
 
+const CACHE_KEY = "user_country_code";
+const CACHE_EXPIRY_KEY = "user_country_code_expiry";
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas
+
 export function useLocalization(): UseLocalizationReturn {
   const [localization, setLocalization] = useState<UseLocalizationReturn>({
     currency: "usd",
@@ -19,10 +23,13 @@ export function useLocalization(): UseLocalizationReturn {
   useEffect(() => {
     const detectLocation = async () => {
       try {
-        // Check localStorage cache first
-        const cached = localStorage.getItem("user_country_code");
-        if (cached) {
-          console.log("Using cached country code:", cached);
+        // Check localStorage cache first (with expiry)
+        const cached = localStorage.getItem(CACHE_KEY);
+        const cacheExpiry = localStorage.getItem(CACHE_EXPIRY_KEY);
+        const now = Date.now();
+
+        if (cached && cacheExpiry && now < parseInt(cacheExpiry)) {
+          console.log("✓ Using cached country code:", cached);
           const config = getLocalizationFromCountry(cached);
           setLocalization({
             currency: config.currency,
@@ -33,20 +40,34 @@ export function useLocalization(): UseLocalizationReturn {
           return;
         }
 
-        // Try ipapi.co first (most reliable)
+        // Clear expired cache
+        if (cached && cacheExpiry && now >= parseInt(cacheExpiry)) {
+          console.log("⚠ Cache expired, fetching new location...");
+          localStorage.removeItem(CACHE_KEY);
+          localStorage.removeItem(CACHE_EXPIRY_KEY);
+        }
+
+        // Fetch location from IP
+        console.log("🌍 Fetching location from IP...");
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
 
         const response = await fetch("https://ipapi.co/json/", {
-          signal: controller.signal
+          signal: controller.signal,
+          cache: "no-store"
         });
         clearTimeout(timeoutId);
 
-        const data = await response.json();
-        const countryCode = data.country_code || "US";
+        if (!response.ok) throw new Error("IP API failed");
 
-        console.log("Detected country code from IP:", countryCode);
-        localStorage.setItem("user_country_code", countryCode);
+        const data = await response.json();
+        const countryCode = data.country_code?.toUpperCase() || "US";
+
+        console.log("✅ Detected country from IP:", countryCode, "- Currency:", getLocalizationFromCountry(countryCode).currency.toUpperCase());
+
+        // Save to cache with expiry
+        localStorage.setItem(CACHE_KEY, countryCode);
+        localStorage.setItem(CACHE_EXPIRY_KEY, (now + CACHE_DURATION).toString());
 
         const config = getLocalizationFromCountry(countryCode);
         setLocalization({
@@ -56,11 +77,7 @@ export function useLocalization(): UseLocalizationReturn {
           isLoading: false,
         });
       } catch (err) {
-        console.error("Failed to detect location:", err);
-        // Fallback to browser language if available
-        const browserLang = navigator?.language?.split("-")[0] || "en";
-        console.log("Using browser language as fallback:", browserLang);
-
+        console.error("❌ Failed to detect location:", err);
         setLocalization({
           currency: "usd",
           language: "en",
