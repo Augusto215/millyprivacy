@@ -65,7 +65,7 @@ export default function Home() {
 
       <main className="min-h-screen bg-white pt-12">
         <div className="mx-auto flex max-w-[480px] flex-col gap-3 px-3 py-4 pb-12">
-          <ProfileCard />
+          <ProfileCard showLiveBorder={false} />
 
           <SubscribeBox
             onSubscribe={() => openModal("1 Mês", 13.87)}
