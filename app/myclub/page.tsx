@@ -46,7 +46,22 @@ export default function MyClub() {
       const { data: userData } = await supabaseBrowser.auth.getUser();
       if (userData.user) {
         setIsLoggedIn(true);
-        router.replace("/content/emilly");
+
+        // Check if user has purchased content
+        try {
+          const res = await fetch("/api/user/has-purchase", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: userData.user.id }),
+          });
+
+          const data = await res.json();
+          if (data.hasPurchase) {
+            router.replace("/content/emilly");
+          }
+        } catch (error) {
+          console.error("Error checking purchases:", error);
+        }
       } else {
         setIsLoggedIn(false);
       }
