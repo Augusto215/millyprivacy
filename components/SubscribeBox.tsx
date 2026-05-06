@@ -21,10 +21,12 @@ export default function SubscribeBox({
   onSubscribe,
   onLogin,
   creatorName = "Milly",
+  price = "13,87",
 }: {
   onSubscribe: () => void;
   onLogin: () => void;
   creatorName?: string;
+  price?: string;
 }) {
   const { d, h, m, s } = useCountdown(1 * 24 * 3600 + 4 * 3600 + 59 * 60 + 10);
 
@@ -61,7 +63,7 @@ export default function SubscribeBox({
             background: "linear-gradient(90deg, #e89c30 0%, #f5bc6a 60%, #f8c97e 100%)",
           }}
         >
-          Assinar agora R$ 13,87
+          Assinar agora R$ {price}
         </button>
       </div>
 
